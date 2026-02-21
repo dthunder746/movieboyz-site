@@ -512,7 +512,7 @@ function buildTable(data, owners, colorMap, LATEST_DATE) {
       field: 'week_' + wk,
       hozAlign: 'right',
       minWidth: 90,
-      cssClass: (i === 0 ? 'week-sep ' : '') + (isLatest ? 'week-latest' : ''),
+      cssClass: [i === 0 ? 'week-sep' : null, isLatest ? 'week-latest' : null].filter(Boolean).join(' '),
       formatter: fmtCell,
       formatterParams: { html: true },
       sorter: 'number',
