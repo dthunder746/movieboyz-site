@@ -124,7 +124,6 @@
   <div class="container-fluid">
     <span class="navbar-brand fw-bold">🎬 MovieBoyz</span>
     <div class="d-flex align-items-center gap-3 ms-auto">
-      <small id="last-updated" class="text-muted"></small>
       <div class="form-check form-switch mb-0">
         <input class="form-check-input" type="checkbox" id="themeSwitch" onchange="toggleTheme(this)">
         <label class="form-check-label" for="themeSwitch">Light</label>
@@ -154,6 +153,12 @@
     <div id="movie-table"></div>
   </div>
 
+</div>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────── -->
+<div class="container-fluid px-3 mt-3 pb-3 border-top pt-2">
+  <small class="text-muted d-block" id="data-updated"></small>
+  <small class="text-muted d-block" id="site-updated"></small>
 </div>
 
 <!-- ── Scripts ────────────────────────────────────────────────────────── -->
@@ -240,6 +245,21 @@ function isoWeekBounds(weekKey) {
       + String(dt.getUTCDate()).padStart(2, '0');
   }
   return { start: iso(wMon), end: iso(wSun) };
+}
+
+function fmtTimestamp(d) {
+  if (typeof d === 'string') {
+    // "2026-02-22 18:30:00" → "26-02-22 18:30:00" (already in local TZ)
+    return d.substring(2);
+  }
+  // Date object — render in browser local time
+  var yy = String(d.getFullYear()).slice(-2);
+  var mo = String(d.getMonth() + 1).padStart(2, '0');
+  var dy = String(d.getDate()).padStart(2, '0');
+  var hh = String(d.getHours()).padStart(2, '0');
+  var mn = String(d.getMinutes()).padStart(2, '0');
+  var ss = String(d.getSeconds()).padStart(2, '0');
+  return yy + '-' + mo + '-' + dy + ' ' + hh + ':' + mn + ':' + ss;
 }
 
 function daysRunning(releaseDate, latestDate) {
@@ -647,22 +667,40 @@ function buildOwnerFilter(owners, colorMap) {
 
 // ── Bootstrap ────────────────────────────────────────────────────────────
 function init(data) {
-  // Derive LATEST_DATE from owner total keys — never use new Date()
-  var allDates = Object.values(data.owners || {}).flatMap(function(o) {
+  // LATEST_DATE — max date with actual gross data, used by table for accuracy
+  var allGrossDates = Object.values(data.movies || {}).flatMap(function(m) {
+    return Object.keys(m.daily_gross || {});
+  });
+  var LATEST_DATE = allGrossDates.length ? allGrossDates.slice().sort().at(-1) : null;
+
+  // LATEST_PROFIT_DATE — max date in owner totals, used by leaderboard
+  var allProfitDates = Object.values(data.owners || {}).flatMap(function(o) {
     return Object.keys(o.total || {});
   });
-  var LATEST_DATE = allDates.length ? allDates.slice().sort().at(-1) : null;
+  var LATEST_PROFIT_DATE = allProfitDates.length ? allProfitDates.slice().sort().at(-1) : null;
 
   var owners   = Object.keys(data.owners || {}).sort();
   var colorMap = buildColorMap(owners);
 
-  // Last updated label
-  if (LATEST_DATE) {
-    var el = document.getElementById('last-updated');
-    if (el) el.textContent = 'Data as of ' + formatShortDate(LATEST_DATE);
+  // Footer: data.json fetched_at
+  if (data.fetched_at) {
+    var elData = document.getElementById('data-updated');
+    if (elData) elData.textContent = 'data.json updated ' + fmtTimestamp(data.fetched_at);
   }
 
-  buildLeaderboard(data, owners, colorMap, LATEST_DATE);
+  // Footer: index.html last commit via GitHub API
+  fetch('https://api.github.com/repos/dthunder746/movieboyz-site/commits?path=index.html&per_page=1')
+    .then(function(r) { return r.json(); })
+    .then(function(commits) {
+      if (commits && commits[0] && commits[0].commit) {
+        var dateStr = commits[0].commit.committer.date;
+        var elSite = document.getElementById('site-updated');
+        if (elSite) elSite.textContent = 'index.html updated ' + fmtTimestamp(new Date(dateStr));
+      }
+    })
+    .catch(function() {});
+
+  buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE);
   buildChart(data, owners, colorMap);
   buildTable(data, owners, colorMap, LATEST_DATE);
   buildOwnerFilter(owners, colorMap);
