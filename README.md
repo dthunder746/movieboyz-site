@@ -16,10 +16,10 @@ Static GitHub Pages dashboard for the MovieBoyz Fantasy Box Office league.
 
 ### 1. Get latest data
 
-`data.json` is gitignored — fetch it from the live site before testing:
+`data.json` is gitignored — fetch the latest from the `data` branch before testing:
 
 ```bash
-curl https://movieboyz.marcus-hill.com/data.json -o data.json
+curl https://raw.githubusercontent.com/dthunder746/movieboyz-site/data/data.json -o data.json
 ```
 
 ### 2. Start a local server
