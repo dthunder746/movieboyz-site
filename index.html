@@ -288,16 +288,23 @@ function dailyDelta(daily_gross, d, prevDate) {
   return daily_gross[d] - daily_gross[prevDate];
 }
 
-// ── Owner colour palette ─────────────────────────────────────────────────
+// ── Colour palettes ──────────────────────────────────────────────────────
+// Owner lines — muted Tableau-style
 var PALETTE = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f',
                '#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'];
 
-// Generate N evenly spaced hues for per-movie mode (works for any count)
+// Per-movie lines — vivid/saturated, clearly distinct from owner lines
+var MOVIE_PALETTE = [
+  '#ff595e','#ff924c','#ffca3a','#8ac926','#1982c4',
+  '#6a4c93','#ff70a6','#70d6ff','#06d6a0','#ffd166',
+  '#ef476f','#118ab2','#ffd60a','#9d4edd','#f72585',
+  '#b5179e','#7209b7','#3a0ca3','#4361ee','#4cc9f0',
+];
+
 function buildMoviePalette(n) {
   var colors = [];
   for (var i = 0; i < n; i++) {
-    var hue = Math.round((i / n) * 360);
-    colors.push('hsl(' + hue + ',70%,62%)');
+    colors.push(MOVIE_PALETTE[i % MOVIE_PALETTE.length]);
   }
   return colors;
 }
@@ -308,10 +315,31 @@ function buildColorMap(owners) {
   return map;
 }
 
+// ── Filter state manager ─────────────────────────────────────────────────
+// Generic multi-select toggle state. onChange(activeArray) fires on every change.
+function createOwnerFilter(onChange) {
+  var activeSet = new Set();
+  return {
+    toggle: function(item) {
+      if (activeSet.has(item)) activeSet.delete(item);
+      else activeSet.add(item);
+      onChange(Array.from(activeSet));
+    },
+    clear: function() {
+      activeSet.clear();
+      onChange([]);
+    },
+    isActive:  function(item) { return activeSet.has(item); },
+    getActive: function()     { return Array.from(activeSet); },
+  };
+}
+
 // ── Leaderboard ──────────────────────────────────────────────────────────
-function buildLeaderboard(data, owners, colorMap, LATEST_DATE, activeOwner) {
+function buildLeaderboard(data, owners, colorMap, LATEST_DATE, activeOwners) {
   var el = document.getElementById('leaderboard');
   if (!el) return;
+
+  var activeSet = new Set(activeOwners);
 
   var ranked = owners.map(function(o) {
     var total = data.owners[o] && data.owners[o].total || {};
@@ -327,12 +355,12 @@ function buildLeaderboard(data, owners, colorMap, LATEST_DATE, activeOwner) {
   el.innerHTML = ranked.map(function(item, idx) {
     var rankLabel = ['🥇','🥈','🥉'][idx] || (idx + 1) + '.';
     var profitHtml = '<span class="' + colorClass(item.profit) + ' fw-semibold">' + fmt(item.profit) + '</span>';
-    var isActive = item.owner === activeOwner;
-    var borderStyle = isActive
-      ? 'border-color:' + colorMap[item.owner] + ';border-width:2px;'
-      : '';
+    var isActive = activeSet.has(item.owner);
+    var outlineStyle = isActive
+      ? 'outline:2px solid ' + colorMap[item.owner] + ';outline-offset:-1px;'
+      : 'outline:none;';
     return '<div class="d-flex align-items-center gap-2 border rounded px-3 py-2"'
-      + ' data-owner="' + item.owner + '" style="cursor:pointer;' + borderStyle + '">'
+      + ' data-owner="' + item.owner + '" style="cursor:pointer;' + outlineStyle + '">'
       + '<span>' + rankLabel + '</span>'
       + '<span class="owner-dot" style="background:' + colorMap[item.owner] + '"></span>'
       + '<span class="fw-medium">' + item.owner + '</span>'
@@ -342,7 +370,11 @@ function buildLeaderboard(data, owners, colorMap, LATEST_DATE, activeOwner) {
 }
 
 // ── Chart ────────────────────────────────────────────────────────────────
-function buildChart(data, owners, colorMap, activeOwner) {
+// activeOwners: string[]
+//   length 0 → all owners' cumulative profit lines
+//   length 1 → per-movie profit lines for that owner
+//   length 2+ → only those owners' cumulative profit lines
+function buildChart(data, owners, colorMap, activeOwners) {
   var theme   = document.documentElement.getAttribute('data-bs-theme') || 'dark';
   var gridCol = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   var tickCol = theme === 'dark' ? '#aaa' : '#555';
@@ -358,30 +390,26 @@ function buildChart(data, owners, colorMap, activeOwner) {
 
   var datasets;
 
-  if (activeOwner) {
-    // Per-movie mode: show each movie's cumulative profit from release
+  if (activeOwners.length === 1) {
+    // Per-movie mode: each released movie for this owner as its own line
+    var soloOwner  = activeOwners[0];
+    var latestDate = allDates[allDates.length - 1] || '';
     var ownerMovies = Object.values(data.movies).filter(function(m) {
-      return m.owner === activeOwner && m.release_date;
+      return m.owner === soloOwner && m.release_date && m.release_date <= latestDate;
     });
     var movieColors = buildMoviePalette(ownerMovies.length);
 
     datasets = ownerMovies.map(function(movie, idx) {
-      var color = movieColors[idx];
-      var dg    = movie.daily_gross || {};
+      var color  = movieColors[idx];
+      var dg     = movie.daily_gross || {};
       var budget = movie.budget || 0;
-      var rel   = movie.release_date;
+      var rel    = movie.release_date;
 
-      // Zero anchor: day before release
-      var anchorDt = new Date(rel + 'T00:00:00Z');
-      anchorDt.setUTCDate(anchorDt.getUTCDate() - 1);
-      var anchor = anchorDt.getUTCFullYear() + '-'
-        + String(anchorDt.getUTCMonth() + 1).padStart(2, '0') + '-'
-        + String(anchorDt.getUTCDate()).padStart(2, '0');
-
-      var points = [{ x: anchor, y: 0 }];
-      allDates.forEach(function(d) {
-        if (d < rel) return;
-        points.push({ x: d, y: (grossAsOf(dg, d) - 2 * budget) / 1e6 });
+      // Pad dates before release with 0 so all datasets share the same x-range
+      // (keeps mode:'index' tooltip correctly aligned across movies)
+      var points = allDates.map(function(d) {
+        var y = d < rel ? 0 : (grossAsOf(dg, d) - 2 * budget) / 1e6;
+        return { x: d, y: y };
       });
 
       return {
@@ -399,8 +427,9 @@ function buildChart(data, owners, colorMap, activeOwner) {
     });
 
   } else {
-    // All-owners mode: cumulative profit totals per owner
-    datasets = owners.map(function(owner) {
+    // 0 owners → show all; 2+ owners → show only selected
+    var displayOwners = activeOwners.length === 0 ? owners : activeOwners;
+    datasets = displayOwners.map(function(owner) {
       var totals = (data.owners[owner] && data.owners[owner].total) || {};
       var points = allDates
         .filter(function(d) { return totals[d] !== undefined; })
@@ -716,50 +745,31 @@ function buildTable(data, owners, colorMap, LATEST_DATE) {
 }
 
 // ── Owner filter ─────────────────────────────────────────────────────────
-function buildOwnerFilter(owners, colorMap) {
-  var container  = document.getElementById('owner-filter');
-  var activeSet  = new Set(); // empty = show all
+// Pure render — no internal state. Reads activeOwners array, paints buttons.
+// Clicks are handled via event delegation in init().
+function buildOwnerFilter(owners, colorMap, activeOwners) {
+  var container = document.getElementById('owner-filter');
+  if (!container) return;
+  var activeSet = new Set(activeOwners);
 
-  function applyFilter() {
-    if (!window._table) return;
-    if (activeSet.size === 0) {
-      window._table.clearFilter();
-    } else {
-      window._table.setFilter('owner', 'in', Array.from(activeSet));
-    }
-  }
+  container.innerHTML = '';
 
-  function render() {
-    container.innerHTML = '';
+  owners.forEach(function(owner) {
+    var active = activeSet.has(owner);
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-sm ' + (active ? 'btn-primary' : 'btn-outline-secondary');
+    if (active) btn.style.backgroundColor = colorMap[owner];
+    btn.style.borderColor = colorMap[owner];
+    btn.dataset.owner = owner;
+    btn.innerHTML = '<span class="owner-dot" style="background:' + colorMap[owner] + '"></span>' + owner;
+    container.appendChild(btn);
+  });
 
-    owners.forEach(function(owner) {
-      var active = activeSet.has(owner);
-      var btn = document.createElement('button');
-      btn.className = 'btn btn-sm ' + (active ? 'btn-primary' : 'btn-outline-secondary');
-      if (active) btn.style.backgroundColor = colorMap[owner];
-      btn.style.borderColor = colorMap[owner];
-      btn.innerHTML = '<span class="owner-dot" style="background:' + colorMap[owner] + '"></span>' + owner;
-      btn.addEventListener('click', function() {
-        if (activeSet.has(owner)) activeSet.delete(owner);
-        else activeSet.add(owner);
-        applyFilter();
-        render();
-      });
-      container.appendChild(btn);
-    });
-
-    var clear = document.createElement('button');
-    clear.className = 'btn btn-sm btn-outline-secondary';
-    clear.textContent = 'Clear';
-    clear.addEventListener('click', function() {
-      activeSet.clear();
-      applyFilter();
-      render();
-    });
-    container.appendChild(clear);
-  }
-
-  render();
+  var clear = document.createElement('button');
+  clear.className = 'btn btn-sm btn-outline-secondary';
+  clear.textContent = 'Clear';
+  clear.dataset.clear = '1';
+  container.appendChild(clear);
 }
 
 // ── Bootstrap ────────────────────────────────────────────────────────────
@@ -797,44 +807,50 @@ function init(data) {
     })
     .catch(function() {});
 
-  // Active owner state (null = all-owners view)
-  var activeOwner = null;
+  // ── Owner filter state ────────────────────────────────────────────────
+  var ownerFilter = createOwnerFilter(function onChange(activeOwners) {
+    // Re-render all linked components whenever the selection changes
+    buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
+    buildOwnerFilter(owners, colorMap, activeOwners);
 
-  buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwner);
-  buildChart(data, owners, colorMap, activeOwner);
+    if (window._chart) window._chart.destroy();
+    buildChart(data, owners, colorMap, activeOwners);
+
+    var heading = document.getElementById('chart-heading');
+    if (heading) {
+      heading.textContent = activeOwners.length === 1
+        ? activeOwners[0] + ': Movie Profits'
+        : 'Profit Over Time';
+    }
+
+    if (window._table) {
+      if (activeOwners.length === 0) window._table.clearFilter();
+      else window._table.setFilter('owner', 'in', activeOwners);
+    }
+  });
+
+  // Initial render (empty selection = show everything)
+  buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, []);
+  buildChart(data, owners, colorMap, []);
   buildTable(data, owners, colorMap, LATEST_DATE);
-  buildOwnerFilter(owners, colorMap);
+  buildOwnerFilter(owners, colorMap, []);
 
-  // Leaderboard click → toggle owner, update chart + table filter
+  // Leaderboard — event delegation (survives innerHTML re-renders)
   var lbEl = document.getElementById('leaderboard');
   if (lbEl) {
     lbEl.addEventListener('click', function(e) {
       var card = e.target.closest('[data-owner]');
-      if (!card) return;
-      var owner = card.dataset.owner;
-      activeOwner = (activeOwner === owner) ? null : owner;
+      if (card) ownerFilter.toggle(card.dataset.owner);
+    });
+  }
 
-      // Refresh leaderboard highlight
-      buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwner);
-
-      // Rebuild chart in new mode
-      if (window._chart) window._chart.destroy();
-      buildChart(data, owners, colorMap, activeOwner);
-
-      // Update chart section heading
-      var heading = document.getElementById('chart-heading');
-      if (heading) {
-        heading.textContent = activeOwner ? activeOwner + ': Movie Profits' : 'Profit Over Time';
-      }
-
-      // Filter table
-      if (window._table) {
-        if (activeOwner) {
-          window._table.setFilter('owner', '=', activeOwner);
-        } else {
-          window._table.clearFilter();
-        }
-      }
+  // Owner filter — event delegation
+  var ofEl = document.getElementById('owner-filter');
+  if (ofEl) {
+    ofEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-owner]');
+      if (btn) { ownerFilter.toggle(btn.dataset.owner); return; }
+      if (e.target.closest('[data-clear]')) ownerFilter.clear();
     });
   }
 
