@@ -142,7 +142,7 @@
 
   <!-- Chart -->
   <div class="d-flex align-items-center justify-content-between mb-2">
-    <h6 class="text-uppercase text-muted fw-semibold mb-0" style="letter-spacing:.08em">Profit Over Time</h6>
+    <h6 id="chart-heading" class="text-uppercase text-muted fw-semibold mb-0" style="letter-spacing:.08em">Profit Over Time</h6>
     <button id="reset-zoom" class="btn btn-sm btn-outline-secondary py-0" style="font-size:0.75rem">Reset zoom</button>
   </div>
   <div id="chart-wrapper" class="mb-4">
@@ -292,6 +292,16 @@ function dailyDelta(daily_gross, d, prevDate) {
 var PALETTE = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f',
                '#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'];
 
+// Generate N evenly spaced hues for per-movie mode (works for any count)
+function buildMoviePalette(n) {
+  var colors = [];
+  for (var i = 0; i < n; i++) {
+    var hue = Math.round((i / n) * 360);
+    colors.push('hsl(' + hue + ',70%,62%)');
+  }
+  return colors;
+}
+
 function buildColorMap(owners) {
   var map = {};
   owners.forEach(function(o, i) { map[o] = PALETTE[i % PALETTE.length]; });
@@ -299,7 +309,7 @@ function buildColorMap(owners) {
 }
 
 // ── Leaderboard ──────────────────────────────────────────────────────────
-function buildLeaderboard(data, owners, colorMap, LATEST_DATE) {
+function buildLeaderboard(data, owners, colorMap, LATEST_DATE, activeOwner) {
   var el = document.getElementById('leaderboard');
   if (!el) return;
 
@@ -317,7 +327,12 @@ function buildLeaderboard(data, owners, colorMap, LATEST_DATE) {
   el.innerHTML = ranked.map(function(item, idx) {
     var rankLabel = ['🥇','🥈','🥉'][idx] || (idx + 1) + '.';
     var profitHtml = '<span class="' + colorClass(item.profit) + ' fw-semibold">' + fmt(item.profit) + '</span>';
-    return '<div class="d-flex align-items-center gap-2 border rounded px-3 py-2">'
+    var isActive = item.owner === activeOwner;
+    var borderStyle = isActive
+      ? 'border-color:' + colorMap[item.owner] + ';border-width:2px;'
+      : '';
+    return '<div class="d-flex align-items-center gap-2 border rounded px-3 py-2"'
+      + ' data-owner="' + item.owner + '" style="cursor:pointer;' + borderStyle + '">'
       + '<span>' + rankLabel + '</span>'
       + '<span class="owner-dot" style="background:' + colorMap[item.owner] + '"></span>'
       + '<span class="fw-medium">' + item.owner + '</span>'
@@ -327,7 +342,7 @@ function buildLeaderboard(data, owners, colorMap, LATEST_DATE) {
 }
 
 // ── Chart ────────────────────────────────────────────────────────────────
-function buildChart(data, owners, colorMap) {
+function buildChart(data, owners, colorMap, activeOwner) {
   var theme   = document.documentElement.getAttribute('data-bs-theme') || 'dark';
   var gridCol = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   var tickCol = theme === 'dark' ? '#aaa' : '#555';
@@ -341,25 +356,69 @@ function buildChart(data, owners, colorMap) {
   });
   var allDates = Array.from(dateSet).sort();
 
-  // Use {x, y} point format for time scale
-  var datasets = owners.map(function(owner) {
-    var totals = (data.owners[owner] && data.owners[owner].total) || {};
-    var points = allDates
-      .filter(function(d) { return totals[d] !== undefined; })
-      .map(function(d) { return { x: d, y: totals[d] / 1e6 }; });
-    return {
-      label:            owner,
-      data:             points,
-      borderColor:      colorMap[owner],
-      backgroundColor:  colorMap[owner] + '22',
-      borderWidth:      2,
-      pointRadius:      0,
-      pointHoverRadius: 4,
-      tension:          0.3,
-      fill:             false,
-      spanGaps:         true,
-    };
-  });
+  var datasets;
+
+  if (activeOwner) {
+    // Per-movie mode: show each movie's cumulative profit from release
+    var ownerMovies = Object.values(data.movies).filter(function(m) {
+      return m.owner === activeOwner && m.release_date;
+    });
+    var movieColors = buildMoviePalette(ownerMovies.length);
+
+    datasets = ownerMovies.map(function(movie, idx) {
+      var color = movieColors[idx];
+      var dg    = movie.daily_gross || {};
+      var budget = movie.budget || 0;
+      var rel   = movie.release_date;
+
+      // Zero anchor: day before release
+      var anchorDt = new Date(rel + 'T00:00:00Z');
+      anchorDt.setUTCDate(anchorDt.getUTCDate() - 1);
+      var anchor = anchorDt.getUTCFullYear() + '-'
+        + String(anchorDt.getUTCMonth() + 1).padStart(2, '0') + '-'
+        + String(anchorDt.getUTCDate()).padStart(2, '0');
+
+      var points = [{ x: anchor, y: 0 }];
+      allDates.forEach(function(d) {
+        if (d < rel) return;
+        points.push({ x: d, y: (grossAsOf(dg, d) - 2 * budget) / 1e6 });
+      });
+
+      return {
+        label:            movie.movie_title,
+        data:             points,
+        borderColor:      color,
+        backgroundColor:  color.replace(')', ',0.13)').replace('hsl(', 'hsla('),
+        borderWidth:      2,
+        pointRadius:      0,
+        pointHoverRadius: 4,
+        tension:          0.3,
+        fill:             false,
+        spanGaps:         true,
+      };
+    });
+
+  } else {
+    // All-owners mode: cumulative profit totals per owner
+    datasets = owners.map(function(owner) {
+      var totals = (data.owners[owner] && data.owners[owner].total) || {};
+      var points = allDates
+        .filter(function(d) { return totals[d] !== undefined; })
+        .map(function(d) { return { x: d, y: totals[d] / 1e6 }; });
+      return {
+        label:            owner,
+        data:             points,
+        borderColor:      colorMap[owner],
+        backgroundColor:  colorMap[owner] + '22',
+        borderWidth:      2,
+        pointRadius:      0,
+        pointHoverRadius: 4,
+        tension:          0.3,
+        fill:             false,
+        spanGaps:         true,
+      };
+    });
+  }
 
   var ctx = document.getElementById('profitChart');
   window._chart = new Chart(ctx, {
@@ -738,10 +797,46 @@ function init(data) {
     })
     .catch(function() {});
 
-  buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE);
-  buildChart(data, owners, colorMap);
+  // Active owner state (null = all-owners view)
+  var activeOwner = null;
+
+  buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwner);
+  buildChart(data, owners, colorMap, activeOwner);
   buildTable(data, owners, colorMap, LATEST_DATE);
   buildOwnerFilter(owners, colorMap);
+
+  // Leaderboard click → toggle owner, update chart + table filter
+  var lbEl = document.getElementById('leaderboard');
+  if (lbEl) {
+    lbEl.addEventListener('click', function(e) {
+      var card = e.target.closest('[data-owner]');
+      if (!card) return;
+      var owner = card.dataset.owner;
+      activeOwner = (activeOwner === owner) ? null : owner;
+
+      // Refresh leaderboard highlight
+      buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwner);
+
+      // Rebuild chart in new mode
+      if (window._chart) window._chart.destroy();
+      buildChart(data, owners, colorMap, activeOwner);
+
+      // Update chart section heading
+      var heading = document.getElementById('chart-heading');
+      if (heading) {
+        heading.textContent = activeOwner ? activeOwner + ': Movie Profits' : 'Profit Over Time';
+      }
+
+      // Filter table
+      if (window._table) {
+        if (activeOwner) {
+          window._table.setFilter('owner', '=', activeOwner);
+        } else {
+          window._table.clearFilter();
+        }
+      }
+    });
+  }
 
   document.getElementById('reset-zoom').addEventListener('click', function() {
     if (window._chart) window._chart.resetZoom();
