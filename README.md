@@ -2,17 +2,21 @@
 
 Static GitHub Pages dashboard for the MovieBoyz Fantasy Box Office league.
 
-`data.json` is automatically pushed here daily by the [movieboyz-fetcher](https://github.com/dthunder746/movieboyz-fetcher) container. `index.html` reads it and renders the dashboard.
+`data.json` is stored on the `data` branch and auto-updated daily by [movieboyz-fetcher](https://github.com/dthunder746/movieboyz-fetcher). `index.html` fetches it at runtime from `raw.githubusercontent.com`.
+
+## Branches
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Production — deployed by GitHub Pages |
+| `dev`  | Development — test here before merging to `main` |
+| `data` | Data only — contains `data.json`, never merged into code branches |
 
 ## Local Development
 
 ### 1. Get latest data
 
-```bash
-git pull origin main
-```
-
-Or fetch directly from the live site:
+`data.json` is gitignored — fetch it from the live site before testing:
 
 ```bash
 curl https://movieboyz.marcus-hill.com/data.json -o data.json
@@ -26,20 +30,27 @@ python3 -m http.server 8080 --directory /path/to/movieboyz-site
 
 Then open `http://localhost:8080`.
 
+> Note: `file://` won't work — the page uses `fetch()` which requires HTTP.
+
 ### 3. Branch workflow
 
-- Work on the `dev` branch
-- Test locally before merging to `main`
-- GitHub Pages only deploys from `main`
-
 ```bash
-# Switch to dev
+# Make sure you're on dev
 git checkout dev
+git pull origin dev
 
-# When ready to go live
+# ... edit, test locally ...
+
+# Commit (never add data.json)
+git add index.html README.md   # name files explicitly
+git commit -m "feat: ..."
+git push origin dev
+
+# Deploy to production
 git checkout main
 git merge dev
 git push
+git checkout dev
 ```
 
 ---

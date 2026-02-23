@@ -748,7 +748,7 @@ function init(data) {
 }
 
 // ── Load data ─────────────────────────────────────────────────────────────
-var DATA_URL = './data.json?' + Date.now();
+var DATA_URL = 'https://raw.githubusercontent.com/dthunder746/movieboyz-site/data/data.json?t=' + Date.now();
 fetch(DATA_URL)
   .then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
