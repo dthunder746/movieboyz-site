@@ -372,6 +372,7 @@ function buildChart(data, owners, colorMap) {
           labels: { color: tickCol, boxWidth: 12, padding: 16 }
         },
         tooltip: {
+          itemSort: function(a, b) { return b.parsed.y - a.parsed.y; },
           callbacks: {
             label: function(ctx) {
               return ' ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y * 1e6);
@@ -530,7 +531,6 @@ function buildTable(data, owners, colorMap, LATEST_DATE) {
     field: 'movie_title',
     frozen: true,
     minWidth: 190,
-    resizable: true,
     formatter: function(cell) {
       var row = cell.getRow().getData();
       var dot = '<span class="owner-dot" style="background:' + (colorMap[row.owner] || '#888') + '"></span>';
@@ -540,7 +540,7 @@ function buildTable(data, owners, colorMap, LATEST_DATE) {
     formatterParams: { html: true },
   };
 
-  var dailyCols = last7.map(function(d, i) {
+  var dailyCols = last7.slice().reverse().map(function(d, i) {
     return {
       title: formatDayMonth(d),
       field: 'daily_' + d,
@@ -553,8 +553,8 @@ function buildTable(data, owners, colorMap, LATEST_DATE) {
     };
   });
 
-  var weeklyCols = last4Weeks.map(function(wk, i) {
-    var isLatest = (i === last4Weeks.length - 1);
+  var weeklyCols = last4Weeks.slice().reverse().map(function(wk, i) {
+    var isLatest = (i === 0);
     var title;
     if (isLatest) {
       var b = isoWeekBounds(wk), sm = b.start.split('-'), em = b.end.split('-');
@@ -651,7 +651,7 @@ function buildTable(data, owners, colorMap, LATEST_DATE) {
     responsiveLayout: false,
     initialSort:      [{ column: 'release_date', dir: 'asc' }],
     columnHeaderVertAlign: 'bottom',
-    resizableColumns: true,
+    resizableColumns: false,
   });
 }
 
