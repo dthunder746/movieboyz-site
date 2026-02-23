@@ -19,7 +19,7 @@
       height: 350px;
     }
     @media (max-width: 576px) {
-      #chart-wrapper { height: 200px; }
+      #chart-wrapper { height: 33vh; min-height: 150px; }
     }
 
     .pick-badge {
@@ -140,7 +140,10 @@
   <div id="leaderboard" class="d-flex flex-wrap gap-2 mb-4"></div>
 
   <!-- Chart -->
-  <h6 class="text-uppercase text-muted fw-semibold mb-2" style="letter-spacing:.08em">Profit Over Time</h6>
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h6 class="text-uppercase text-muted fw-semibold mb-0" style="letter-spacing:.08em">Profit Over Time</h6>
+    <button id="reset-zoom" class="btn btn-sm btn-outline-secondary py-0" style="font-size:0.75rem">Reset zoom</button>
+  </div>
   <div id="chart-wrapper" class="mb-4">
     <canvas id="profitChart"></canvas>
   </div>
@@ -164,6 +167,9 @@
 <!-- ── Scripts ────────────────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
 
 <script>
@@ -321,6 +327,11 @@ function buildLeaderboard(data, owners, colorMap, LATEST_DATE) {
 
 // ── Chart ────────────────────────────────────────────────────────────────
 function buildChart(data, owners, colorMap) {
+  var theme   = document.documentElement.getAttribute('data-bs-theme') || 'dark';
+  var gridCol = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  var tickCol = theme === 'dark' ? '#aaa' : '#555';
+
+  // Collect all dates across all owners
   var dateSet = new Set();
   owners.forEach(function(o) {
     Object.keys((data.owners[o] && data.owners[o].total) || {}).forEach(function(d) {
@@ -329,32 +340,30 @@ function buildChart(data, owners, colorMap) {
   });
   var allDates = Array.from(dateSet).sort();
 
-  var theme   = document.documentElement.getAttribute('data-bs-theme') || 'dark';
-  var gridCol = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  var tickCol = theme === 'dark' ? '#aaa' : '#555';
-
+  // Use {x, y} point format for time scale
   var datasets = owners.map(function(owner) {
     var totals = (data.owners[owner] && data.owners[owner].total) || {};
+    var points = allDates
+      .filter(function(d) { return totals[d] !== undefined; })
+      .map(function(d) { return { x: d, y: totals[d] / 1e6 }; });
     return {
-      label:           owner,
-      data:            allDates.map(function(d) {
-        return totals[d] !== undefined ? totals[d] / 1e6 : null;
-      }),
-      borderColor:     colorMap[owner],
-      backgroundColor: colorMap[owner] + '22',
-      borderWidth:     2,
-      pointRadius:     0,
+      label:            owner,
+      data:             points,
+      borderColor:      colorMap[owner],
+      backgroundColor:  colorMap[owner] + '22',
+      borderWidth:      2,
+      pointRadius:      0,
       pointHoverRadius: 4,
-      tension:         0.3,
-      fill:            false,
-      spanGaps:        true,
+      tension:          0.3,
+      fill:             false,
+      spanGaps:         true,
     };
   });
 
   var ctx = document.getElementById('profitChart');
   window._chart = new Chart(ctx, {
     type: 'line',
-    data: { labels: allDates, datasets: datasets },
+    data: { datasets: datasets },
     options: {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
@@ -368,20 +377,48 @@ function buildChart(data, owners, colorMap) {
               return ' ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y * 1e6);
             }
           }
-        }
+        },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode:  'x',
+          },
+          pan: {
+            enabled: true,
+            mode:    'x',
+          },
+          limits: {
+            x: { min: 'original', max: 'original', minRange: 7 * 24 * 60 * 60 * 1000 },
+          },
+        },
       },
       scales: {
         x: {
+          type: 'time',
+          time: {
+            tooltipFormat: 'MMM d, yyyy',
+            displayFormats: {
+              day:   'MMM d',
+              week:  'MMM d',
+              month: 'MMM',
+              year:  'yyyy',
+            },
+          },
           ticks: {
-            color: tickCol,
-            maxTicksLimit: 12,
+            color:       tickCol,
             maxRotation: 0,
+            major:       { enabled: true },
+            // Bold font on major ticks (month boundaries)
+            font: function(context) {
+              return context.tick && context.tick.major ? { weight: 'bold' } : {};
+            },
           },
           grid: { color: gridCol },
         },
         y: {
           ticks: {
-            color: tickCol,
+            color:    tickCol,
             callback: function(v) { return fmt(v * 1e6); }
           },
           grid: { color: gridCol },
@@ -704,6 +741,10 @@ function init(data) {
   buildChart(data, owners, colorMap);
   buildTable(data, owners, colorMap, LATEST_DATE);
   buildOwnerFilter(owners, colorMap);
+
+  document.getElementById('reset-zoom').addEventListener('click', function() {
+    if (window._chart) window._chart.resetZoom();
+  });
 }
 
 // ── Load data ─────────────────────────────────────────────────────────────
