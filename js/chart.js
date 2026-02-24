@@ -10,6 +10,9 @@ import { buildMoviePalette } from './palettes.js';
 //   length 1 → per-movie profit lines for that owner
 //   length 2+ → only those owners' cumulative profit lines
 //
+// All datasets span the full allDates range with null for pre-opening dates
+// so Chart.js mode:'index' hover aligns correctly across every dataset.
+//
 // Returns the Chart.js instance.
 // Chart (UMD global) is loaded via <script src> in index.html.
 
@@ -19,12 +22,18 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
   var gridCol = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   var tickCol = theme === 'dark' ? '#aaa' : '#555';
 
-  // Collect all dates across all owners
+  // Collect all dates: owner totals + every movie profit series.
+  // Movie profit series may start before the owner zero-anchor (e.g. unowned
+  // movies that opened before any league pick), so we must union both sources
+  // or those early dates will be silently dropped from the chart.
   var dateSet = new Set();
   owners.forEach(function(o) {
     Object.keys((data.owners[o] && data.owners[o].total) || {}).forEach(function(d) {
       dateSet.add(d);
     });
+  });
+  Object.values(data.movies || {}).forEach(function(m) {
+    Object.keys(m.profit || {}).forEach(function(d) { dateSet.add(d); });
   });
   var allDates = Array.from(dateSet).sort();
 
@@ -34,15 +43,16 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
     // Selected-movies mode: exactly the rows the user picked in the table
     var selColors = buildMoviePalette(activeMovies.length);
     datasets = activeMovies.map(function(imdb_id, idx) {
-      var movie  = data.movies[imdb_id];
+      var movie      = data.movies[imdb_id];
       if (!movie) return null;
-      var color  = selColors[idx];
-      var dg     = movie.daily_gross || {};
-      var budget = movie.budget || 0;
-      var rel    = movie.release_date;
+      var profit     = movie.profit || {};
+      var profitKeys = Object.keys(profit).sort();
+      if (!profitKeys.length) return null; // unreleased — no data yet
+      var color     = selColors[idx];
+      var firstDate = profitKeys[0];
+      // Span full allDates; null before movie's first data point
       var points = allDates.map(function(d) {
-        var y = d < rel ? 0 : (grossAsOf(dg, d) - 2 * budget) / 1e6;
-        return { x: d, y: y };
+        return { x: d, y: d >= firstDate ? grossAsOf(profit, d) / 1e6 : null };
       });
       return {
         label:            movie.movie_title,
@@ -54,32 +64,27 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
         pointHoverRadius: 4,
         tension:          0.3,
         fill:             false,
-        spanGaps:         true,
+        spanGaps:         false,
       };
     }).filter(Boolean);
 
   } else if (activeOwners.length === 1) {
     // Per-movie mode: each released movie for this owner as its own line
-    var soloOwner  = activeOwners[0];
-    var latestDate = allDates[allDates.length - 1] || '';
+    var soloOwner   = activeOwners[0];
     var ownerMovies = Object.values(data.movies).filter(function(m) {
-      return m.owner === soloOwner && m.release_date && m.release_date <= latestDate;
+      return m.owner === soloOwner && Object.keys(m.profit || {}).length > 0;
     });
     var movieColors = buildMoviePalette(ownerMovies.length);
 
     datasets = ownerMovies.map(function(movie, idx) {
-      var color  = movieColors[idx];
-      var dg     = movie.daily_gross || {};
-      var budget = movie.budget || 0;
-      var rel    = movie.release_date;
-
-      // Pad dates before release with 0 so all datasets share the same x-range
-      // (keeps mode:'index' tooltip correctly aligned across movies)
+      var color      = movieColors[idx];
+      var profit     = movie.profit || {};
+      var profitKeys = Object.keys(profit).sort();
+      if (!profitKeys.length) return null;
+      var firstDate = profitKeys[0];
       var points = allDates.map(function(d) {
-        var y = d < rel ? 0 : (grossAsOf(dg, d) - 2 * budget) / 1e6;
-        return { x: d, y: y };
+        return { x: d, y: d >= firstDate ? grossAsOf(profit, d) / 1e6 : null };
       });
-
       return {
         label:            movie.movie_title,
         data:             points,
@@ -90,18 +95,19 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
         pointHoverRadius: 4,
         tension:          0.3,
         fill:             false,
-        spanGaps:         true,
+        spanGaps:         false,
       };
-    });
+    }).filter(Boolean);
 
   } else {
     // 0 owners → show all; 2+ owners → show only selected
     var displayOwners = activeOwners.length === 0 ? owners : activeOwners;
     datasets = displayOwners.map(function(owner) {
       var totals = (data.owners[owner] && data.owners[owner].total) || {};
-      var points = allDates
-        .filter(function(d) { return totals[d] !== undefined; })
-        .map(function(d) { return { x: d, y: totals[d] / 1e6 }; });
+      // Span full allDates; null where owner has no data yet
+      var points = allDates.map(function(d) {
+        return { x: d, y: totals[d] !== undefined ? totals[d] / 1e6 : null };
+      });
       return {
         label:            owner,
         data:             points,
@@ -112,9 +118,29 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
         pointHoverRadius: 4,
         tension:          0.3,
         fill:             false,
-        spanGaps:         true,
+        spanGaps:         false,
       };
     });
+  }
+
+  // Auto-trim: find the first date any dataset has a non-null, non-zero value.
+  // Set the initial visible range to 7 days before that point so the chart
+  // opens on meaningful data rather than a long stretch of zeros.
+  var firstNonZeroDate = null;
+  datasets.forEach(function(ds) {
+    for (var i = 0; i < ds.data.length; i++) {
+      var pt = ds.data[i];
+      if (pt.y !== null && pt.y !== 0) {
+        if (!firstNonZeroDate || pt.x < firstNonZeroDate) firstNonZeroDate = pt.x;
+        break;
+      }
+    }
+  });
+  var xMin;
+  if (firstNonZeroDate) {
+    var trimD = new Date(firstNonZeroDate + 'T00:00:00Z');
+    trimD.setUTCDate(trimD.getUTCDate() - 1);
+    xMin = trimD.toISOString().split('T')[0];
   }
 
   var ctx = document.getElementById('profitChart');
@@ -129,6 +155,8 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
           labels: { color: tickCol, boxWidth: 12, padding: 16 }
         },
         tooltip: {
+          // Hide null entries (pre-opening dates) from tooltip
+          filter:   function(item) { return item.parsed.y !== null; },
           itemSort: function(a, b) { return b.parsed.y - a.parsed.y; },
           callbacks: {
             label: function(ctx) {
@@ -138,13 +166,15 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
         },
         zoom: {
           zoom: {
+            drag:  { enabled: true },   // drag to zoom (horizontal only via mode:'x')
             wheel: { enabled: true },
             pinch: { enabled: true },
             mode:  'x',
           },
           pan: {
-            enabled: true,
-            mode:    'x',
+            enabled:     true,
+            mode:        'x',
+            modifierKey: 'shift',        // shift+drag to pan
           },
           limits: {
             x: { min: 'original', max: 'original', minRange: 7 * 24 * 60 * 60 * 1000 },
@@ -154,6 +184,7 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
       scales: {
         x: {
           type: 'time',
+          min:  xMin,                    // initial view: 7 days before first real data
           time: {
             tooltipFormat: 'MMM d, yyyy',
             displayFormats: {
@@ -167,7 +198,6 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
             color:       tickCol,
             maxRotation: 0,
             major:       { enabled: true },
-            // Bold font on major ticks (month boundaries)
             font: function(context) {
               return context.tick && context.tick.major ? { weight: 'bold' } : {};
             },

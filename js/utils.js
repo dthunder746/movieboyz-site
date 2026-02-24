@@ -25,16 +25,6 @@ export function formatDayMonth(d) {
   return parts[2] + '/' + parts[1];
 }
 
-export function formatWeekLabel(dates) {
-  if (!dates.length) return '';
-  var first = dates[0], last = dates[dates.length - 1];
-  var fm = first.split('-')[1], lm = last.split('-')[1];
-  var ld = parseInt(last.split('-')[2]);
-  if (fm === lm) {
-    return formatShortDate(first) + '–' + ld;
-  }
-  return formatShortDate(first) + '–' + formatShortDate(last);
-}
 
 export function isoWeekBounds(weekKey) {
   // Returns { start, end } as YYYY-MM-DD for the Mon–Sun of the given ISO week key
@@ -68,12 +58,6 @@ export function fmtTimestamp(d) {
   return yy + '-' + mo + '-' + dy + ' ' + hh + ':' + mn + ':' + ss;
 }
 
-export function daysRunning(releaseDate, latestDate) {
-  if (!releaseDate || !latestDate || releaseDate > latestDate) return null;
-  var a = Date.parse(releaseDate + 'T00:00:00Z');
-  var b = Date.parse(latestDate  + 'T00:00:00Z');
-  return Math.round((b - a) / 86400000);
-}
 
 export function grossAsOf(daily_gross, targetDate) {
   if (!daily_gross) return 0;
@@ -82,7 +66,3 @@ export function grossAsOf(daily_gross, targetDate) {
   return daily_gross[dates[dates.length - 1]] || 0;
 }
 
-export function dailyDelta(daily_gross, d, prevDate) {
-  if (daily_gross[d] === undefined || daily_gross[prevDate] === undefined) return null;
-  return daily_gross[d] - daily_gross[prevDate];
-}
