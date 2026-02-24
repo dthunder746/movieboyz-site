@@ -36,14 +36,15 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
     datasets = activeMovies.map(function(imdb_id, idx) {
       var movie  = data.movies[imdb_id];
       if (!movie) return null;
-      var color  = selColors[idx];
       var dg     = movie.daily_gross || {};
-      var budget = movie.budget || 0;
-      var rel    = movie.release_date;
-      var points = allDates.map(function(d) {
-        var y = d < rel ? 0 : (grossAsOf(dg, d) - 2 * budget) / 1e6;
-        return { x: d, y: y };
-      });
+      var dgKeys = Object.keys(dg).sort();
+      if (!dgKeys.length) return null; // unreleased — no data yet
+      var color     = selColors[idx];
+      var budget    = movie.budget || 0;
+      var firstDate = dgKeys[0]; // fetcher ensures this is the zero-anchor date
+      var points = allDates
+        .filter(function(d) { return d >= firstDate; })
+        .map(function(d) { return { x: d, y: (grossAsOf(dg, d) - 2 * budget) / 1e6 }; });
       return {
         label:            movie.movie_title,
         data:             points,
@@ -61,25 +62,19 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
   } else if (activeOwners.length === 1) {
     // Per-movie mode: each released movie for this owner as its own line
     var soloOwner  = activeOwners[0];
-    var latestDate = allDates[allDates.length - 1] || '';
     var ownerMovies = Object.values(data.movies).filter(function(m) {
-      return m.owner === soloOwner && m.release_date && m.release_date <= latestDate;
+      return m.owner === soloOwner && Object.keys(m.daily_gross || {}).length > 0;
     });
     var movieColors = buildMoviePalette(ownerMovies.length);
 
     datasets = ownerMovies.map(function(movie, idx) {
-      var color  = movieColors[idx];
-      var dg     = movie.daily_gross || {};
-      var budget = movie.budget || 0;
-      var rel    = movie.release_date;
-
-      // Pad dates before release with 0 so all datasets share the same x-range
-      // (keeps mode:'index' tooltip correctly aligned across movies)
-      var points = allDates.map(function(d) {
-        var y = d < rel ? 0 : (grossAsOf(dg, d) - 2 * budget) / 1e6;
-        return { x: d, y: y };
-      });
-
+      var color     = movieColors[idx];
+      var dg        = movie.daily_gross || {};
+      var budget    = movie.budget || 0;
+      var firstDate = Object.keys(dg).sort()[0];
+      var points = allDates
+        .filter(function(d) { return d >= firstDate; })
+        .map(function(d) { return { x: d, y: (grossAsOf(dg, d) - 2 * budget) / 1e6 }; });
       return {
         label:            movie.movie_title,
         data:             points,
