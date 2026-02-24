@@ -72,21 +72,47 @@ function init(data) {
     })
     .catch(function() {});
 
+  // ── Movie-selection helpers ───────────────────────────────────────────
+  var _suppressMovieSelection = false;
+  var clearMovieBtn = null; // assigned after buildTable
+
+  function updateChartHeading(activeOwners, activeMovieIds) {
+    var heading = document.getElementById('chart-heading');
+    if (!heading) return;
+    if (activeMovieIds.length > 0) {
+      if (activeMovieIds.length === 1) {
+        var m = data.movies[activeMovieIds[0]];
+        heading.textContent = m ? m.movie_title : 'Selected Movie';
+      } else if (activeMovieIds.length === 2) {
+        heading.textContent = activeMovieIds.map(function(id) {
+          var m = data.movies[id]; return m ? m.movie_title : id;
+        }).join(' · ');
+      } else {
+        heading.textContent = activeMovieIds.length + ' Movies';
+      }
+    } else if (activeOwners.length === 1) {
+      heading.textContent = activeOwners[0] + ': Movie Profits';
+    } else {
+      heading.textContent = 'Profit Over Time';
+    }
+  }
+
   // ── Owner filter state ─────────────────────────────────────────────────
   var ownerFilter = createOwnerFilter(function onChange(activeOwners) {
     // Re-render all linked components whenever the selection changes
     buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
     buildOwnerFilter(owners, colorMap, activeOwners);
 
-    if (_chart) _chart.destroy();
-    _chart = buildChart(data, owners, colorMap, activeOwners);
+    // Clear movie selection so chart stays consistent with table view
+    _suppressMovieSelection = true;
+    if (_table) _table.deselectRow();
+    _suppressMovieSelection = false;
+    if (clearMovieBtn) clearMovieBtn.classList.add('d-none');
 
-    var heading = document.getElementById('chart-heading');
-    if (heading) {
-      heading.textContent = activeOwners.length === 1
-        ? activeOwners[0] + ': Movie Profits'
-        : 'Profit Over Time';
-    }
+    if (_chart) _chart.destroy();
+    _chart = buildChart(data, owners, colorMap, activeOwners, []);
+
+    updateChartHeading(activeOwners, []);
 
     if (_table) {
       if (activeOwners.length === 0) _table.clearFilter();
@@ -96,9 +122,30 @@ function init(data) {
 
   // Initial render (empty selection = show everything)
   buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, []);
-  _chart = buildChart(data, owners, colorMap, []);
+  _chart = buildChart(data, owners, colorMap, [], []);
   _table = buildTable(data, owners, colorMap, LATEST_DATE);
   buildOwnerFilter(owners, colorMap, []);
+
+  // ── Movie selection (Tabulator as source of truth) ────────────────────
+  clearMovieBtn = document.getElementById('clear-movie-selection');
+
+  _table.on('rowSelectionChanged', function(selectedData) {
+    if (_suppressMovieSelection) return;
+    var activeMovieIds = selectedData.map(function(d) { return d.imdb_id; });
+    if (_chart) _chart.destroy();
+    _chart = buildChart(data, owners, colorMap, ownerFilter.getActive(), activeMovieIds);
+    updateChartHeading(ownerFilter.getActive(), activeMovieIds);
+    if (clearMovieBtn) {
+      if (activeMovieIds.length > 0) clearMovieBtn.classList.remove('d-none');
+      else                           clearMovieBtn.classList.add('d-none');
+    }
+  });
+
+  if (clearMovieBtn) {
+    clearMovieBtn.addEventListener('click', function() {
+      if (_table) _table.deselectRow();
+    });
+  }
 
   // Leaderboard — event delegation (survives innerHTML re-renders)
   var lbEl = document.getElementById('leaderboard');

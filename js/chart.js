@@ -2,7 +2,10 @@ import { grossAsOf, fmt } from './utils.js';
 import { buildMoviePalette } from './palettes.js';
 
 // ── Chart ─────────────────────────────────────────────────────────────────
-// activeOwners: string[]
+// activeMovies: imdb_id string[] (highest priority — overrides activeOwners for chart)
+//   length > 0 → per-movie profit lines for exactly those movies
+//
+// activeOwners: string[] (used only when activeMovies is empty)
 //   length 0 → all owners' cumulative profit lines
 //   length 1 → per-movie profit lines for that owner
 //   length 2+ → only those owners' cumulative profit lines
@@ -10,7 +13,8 @@ import { buildMoviePalette } from './palettes.js';
 // Returns the Chart.js instance.
 // Chart (UMD global) is loaded via <script src> in index.html.
 
-export function buildChart(data, owners, colorMap, activeOwners) {
+export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
+  activeMovies = activeMovies || [];
   var theme   = document.documentElement.getAttribute('data-bs-theme') || 'dark';
   var gridCol = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   var tickCol = theme === 'dark' ? '#aaa' : '#555';
@@ -26,7 +30,35 @@ export function buildChart(data, owners, colorMap, activeOwners) {
 
   var datasets;
 
-  if (activeOwners.length === 1) {
+  if (activeMovies.length > 0) {
+    // Selected-movies mode: exactly the rows the user picked in the table
+    var selColors = buildMoviePalette(activeMovies.length);
+    datasets = activeMovies.map(function(imdb_id, idx) {
+      var movie  = data.movies[imdb_id];
+      if (!movie) return null;
+      var color  = selColors[idx];
+      var dg     = movie.daily_gross || {};
+      var budget = movie.budget || 0;
+      var rel    = movie.release_date;
+      var points = allDates.map(function(d) {
+        var y = d < rel ? 0 : (grossAsOf(dg, d) - 2 * budget) / 1e6;
+        return { x: d, y: y };
+      });
+      return {
+        label:            movie.movie_title,
+        data:             points,
+        borderColor:      color,
+        backgroundColor:  color + '22',
+        borderWidth:      2,
+        pointRadius:      0,
+        pointHoverRadius: 4,
+        tension:          0.3,
+        fill:             false,
+        spanGaps:         true,
+      };
+    }).filter(Boolean);
+
+  } else if (activeOwners.length === 1) {
     // Per-movie mode: each released movie for this owner as its own line
     var soloOwner  = activeOwners[0];
     var latestDate = allDates[allDates.length - 1] || '';

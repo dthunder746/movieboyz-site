@@ -11,103 +11,8 @@
   <!-- Tabulator Bootstrap5 theme -->
   <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
 
-  <style>
-    body { font-size: 0.9rem; }
-
-    #chart-wrapper {
-      position: relative;
-      height: 350px;
-    }
-    @media (max-width: 576px) {
-      #chart-wrapper { height: 33vh; min-height: 150px; }
-    }
-
-    .pick-badge {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      vertical-align: middle;
-    }
-    .pick-hit      { background: #0d6efd22; color: #6ea8fe; border: 1px solid #0d6efd55; }
-    .pick-seasonal { background: #19875422; color: #75b798; border: 1px solid #19875455; }
-    .pick-alt      { background: #6f42c122; color: #b08bf8; border: 1px solid #6f42c155; }
-    .pick-bomb     { background: #dc354522; color: #ea868f; border: 1px solid #dc354555; }
-
-    [data-bs-theme="light"] .pick-hit      { background: #cfe2ff; color: #052c65; border: 1px solid #9ec5fe; }
-    [data-bs-theme="light"] .pick-seasonal { background: #d1e7dd; color: #0a3622; border: 1px solid #a3cfbb; }
-    [data-bs-theme="light"] .pick-alt      { background: #e9d7fe; color: #3b0764; border: 1px solid #d0a8ff; }
-    [data-bs-theme="light"] .pick-bomb     { background: #f8d7da; color: #58151c; border: 1px solid #f1aeb5; }
-
-    .text-pos { color: #75b798 !important; }
-    .text-neg { color: #ea868f !important; }
-    .text-neu { color: var(--bs-secondary-color) !important; }
-
-    [data-bs-theme="light"] .text-pos { color: #198754 !important; }
-    [data-bs-theme="light"] .text-neg { color: #dc3545 !important; }
-
-    .owner-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-right: 5px;
-      vertical-align: middle;
-    }
-
-    /* Tabulator tweaks */
-    .tabulator { font-size: 0.85rem; }
-    .tabulator-col-title { white-space: normal; word-break: keep-all; overflow-wrap: normal; }
-    #table-wrapper { overflow-x: auto; }
-    .tabulator .tabulator-col-resize-handle { display: none !important; }
-
-    /* Tabulator dark mode */
-    [data-bs-theme="dark"] .tabulator {
-      background-color: #212529;
-      border-color: #495057;
-      color: #dee2e6;
-    }
-    [data-bs-theme="dark"] .tabulator-header,
-    [data-bs-theme="dark"] .tabulator-header .tabulator-col,
-    [data-bs-theme="dark"] .tabulator-header .tabulator-col .tabulator-col-content,
-    [data-bs-theme="dark"] .tabulator-header .tabulator-col-group {
-      background-color: #2b3035;
-      color: #dee2e6;
-      border-color: #495057;
-    }
-    [data-bs-theme="dark"] .tabulator-header .tabulator-col.tabulator-sortable:hover {
-      background-color: #343a40;
-    }
-    [data-bs-theme="dark"] .tabulator-col-sorter { color: #adb5bd; }
-    [data-bs-theme="dark"] .tabulator-row,
-    [data-bs-theme="dark"] .tabulator-row.tabulator-row-even {
-      background-color: #212529;
-      color: #dee2e6;
-      border-color: rgba(255,255,255,0.08);
-    }
-    [data-bs-theme="dark"] .tabulator-row:hover,
-    [data-bs-theme="dark"] .tabulator-row.tabulator-row-even:hover {
-      background-color: #343a40 !important;
-    }
-    [data-bs-theme="dark"] .tabulator-cell { border-color: rgba(255,255,255,0.06); }
-    [data-bs-theme="dark"] .tabulator-frozen-rows-holder { background-color: #212529; }
-
-    /* Separators between column groups */
-    .tabulator .tabulator-col.week-sep,
-    .tabulator .tabulator-col.daily-sep,
-    .tabulator-row .tabulator-cell.week-sep,
-    .tabulator-row .tabulator-cell.daily-sep {
-      border-left: 2px solid var(--bs-border-color) !important;
-    }
-
-    /* Latest (in-progress) weekly column — italic to signal partial figures */
-    .tabulator .tabulator-col.week-latest .tabulator-col-title,
-    .tabulator-row .tabulator-cell.week-latest {
-      font-style: italic;
-    }
-  </style>
+  <!-- App styles -->
+  <link href="css/style.css" rel="stylesheet">
 
   <!-- Restore theme before first paint to avoid flash -->
   <script>
@@ -154,6 +59,10 @@
 
   <!-- Movie table -->
   <div id="table-wrapper">
+    <div class="d-flex align-items-center justify-content-between mb-1">
+      <span class="text-muted" style="font-size:0.78rem">Click rows to plot on chart</span>
+      <button id="clear-movie-selection" class="btn btn-sm btn-outline-secondary py-0 d-none" style="font-size:0.75rem">Clear selection</button>
+    </div>
     <div id="movie-table"></div>
   </div>
 
