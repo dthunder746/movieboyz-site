@@ -139,7 +139,7 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
   var xMin;
   if (firstNonZeroDate) {
     var trimD = new Date(firstNonZeroDate + 'T00:00:00Z');
-    trimD.setUTCDate(trimD.getUTCDate() - 7);
+    trimD.setUTCDate(trimD.getUTCDate() - 1);
     xMin = trimD.toISOString().split('T')[0];
   }
 
