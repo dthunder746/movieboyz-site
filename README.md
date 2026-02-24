@@ -8,13 +8,20 @@ Static GitHub Pages dashboard for the MovieBoyz Fantasy Box Office league.
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Production — deployed by GitHub Pages |
+| `main` | Production — built and deployed by GitHub Actions |
 | `dev`  | Development — test here before merging to `main` |
 | `data` | Data only — contains `data.json`, never merged into code branches |
 
 ## Local Development
 
-### 1. Get latest data
+### 1. Install dependencies (first time only)
+
+```bash
+nvm use        # switches to the pinned Node version (.nvmrc)
+npm install
+```
+
+### 2. Get latest data
 
 `data.json` is gitignored — fetch the latest from the `data` branch before testing:
 
@@ -22,17 +29,15 @@ Static GitHub Pages dashboard for the MovieBoyz Fantasy Box Office league.
 curl https://raw.githubusercontent.com/dthunder746/movieboyz-site/data/data.json -o data.json
 ```
 
-### 2. Start a local server
+### 3. Start the dev server
 
 ```bash
-python3 -m http.server 8080 --directory /path/to/movieboyz-site
+npm run dev
 ```
 
-Then open `http://localhost:8080`.
+Then open the URL printed in the terminal (default `http://localhost:5173`).
 
-> Note: `file://` won't work — the page uses `fetch()` which requires HTTP.
-
-### 3. Branch workflow
+### 4. Branch workflow
 
 ```bash
 # Make sure you're on dev
@@ -41,15 +46,14 @@ git pull origin dev
 
 # ... edit, test locally ...
 
-# Commit (never add data.json)
-git add index.html README.md   # name files explicitly
+git add <files>
 git commit -m "feat: ..."
 git push origin dev
 
 # Deploy to production
 git checkout main
 git merge dev
-git push
+git push          # triggers GitHub Actions build → Pages deploy
 git checkout dev
 ```
 
@@ -57,7 +61,7 @@ git checkout dev
 
 ## GitHub Pages Setup
 
-1. Settings → Pages → Deploy from branch → `main` → `/ (root)`
-2. Optionally add a `CNAME` file for a custom domain (e.g. `movieboyz.example.com`)
+1. Settings → Pages → Source → **GitHub Actions**
+2. CNAME file (`public/CNAME`) carries the custom domain through the build automatically
 3. DNS: CNAME record pointing your subdomain → `dthunder746.github.io`
    - Proxy must be **disabled** (grey cloud on Cloudflare) for GitHub to issue its SSL cert

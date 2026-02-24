@@ -57,6 +57,7 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
       release_date:   movie.release_date || 'TBA',
       days_running:   released ? daysRunning(movie.release_date, LATEST_DATE) : null,
       budget:         budget,
+      breakeven:      budget > 0 ? budget * 2 : null,
       to_date_gross:  released ? toDateGross  : null,
       to_date_profit: released ? toDateProfit : null,
     };
@@ -157,22 +158,21 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
       columns: [
         titleCol,
         {
-          title: 'Opening Date',
+          title: 'Opening',
           field: 'release_date',
-          minWidth: 130,
+          minWidth: 120,
           sorter: 'string',
-        },
-        {
-          title: 'Days',
-          field: 'days_running',
-          hozAlign: 'right',
-          minWidth: 72,
           formatter: function(cell) {
-            var v = cell.getValue();
-            return v !== null && v !== undefined ? String(v) : '<span class="text-neu">—</span>';
+            var row = cell.getRow().getData();
+            var rel = row.release_date;
+            if (rel === 'TBA') return '<span class="text-neu">TBA</span>';
+            var label = formatShortDate(rel);
+            if (row.days_running !== null && row.days_running !== undefined) {
+              label += ' · ' + row.days_running + 'd';
+            }
+            return label;
           },
           formatterParams: { html: true },
-          sorter: 'number',
         },
         {
           title: 'Owner',
@@ -183,6 +183,16 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
             return '<span class="owner-dot" style="background:' + (colorMap[o] || '#888') + '"></span>' + o;
           },
           formatterParams: { html: true },
+        },
+        {
+          title: 'B/E',
+          field: 'breakeven',
+          hozAlign: 'right',
+          minWidth: 80,
+          headerTooltip: 'Breakeven (2 × production budget)',
+          formatter: fmtGross,
+          formatterParams: { html: true },
+          sorter: 'number',
         },
         {
           title: 'Gross TD',
