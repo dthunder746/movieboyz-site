@@ -212,6 +212,9 @@ export function buildTable(data, colorMap) {
     columnHeaderVertAlign: 'bottom',
     resizableColumns:      false,
     selectableRows:        true,
+    pagination:            true,
+    paginationSize:        25,
+    paginationSizeSelector: [10, 25, 50, 100, true],
   });
 
   return { table: table, hiddenWeekCols: hiddenWeekCols };
