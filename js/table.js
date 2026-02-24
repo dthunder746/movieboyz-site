@@ -110,8 +110,8 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
     formatter: function(cell) {
       var row = cell.getRow().getData();
       var dot = '<span class="owner-dot" style="background:' + (colorMap[row.owner] || '#888') + '"></span>';
-      var badge = '<span class="pick-badge pick-' + row.pick_type + '">' + row.pick_type + '</span>';
-      return dot + cell.getValue() + ' ' + badge;
+      var badge = row.pick_type ? '<span class="pick-badge pick-' + row.pick_type + '">' + row.pick_type + '</span>' : '';
+      return dot + cell.getValue() + (badge ? ' ' + badge : '');
     },
     formatterParams: { html: true },
   };
@@ -247,7 +247,7 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
 // Pure render — no internal state. Reads activeOwners array, paints buttons.
 // Clicks are handled via event delegation in app.js.
 
-export function buildOwnerFilter(owners, colorMap, activeOwners) {
+export function buildOwnerFilter(owners, colorMap, activeOwners, showUnowned) {
   var container = document.getElementById('owner-filter');
   if (!container) return;
   var activeSet = new Set(activeOwners);
@@ -264,6 +264,12 @@ export function buildOwnerFilter(owners, colorMap, activeOwners) {
     btn.innerHTML = '<span class="owner-dot" style="background:' + colorMap[owner] + '"></span>' + owner;
     container.appendChild(btn);
   });
+
+  var toggle = document.createElement('button');
+  toggle.className = 'btn btn-sm btn-outline-secondary';
+  toggle.textContent = showUnowned ? 'Hide unowned movies' : 'Show unowned movies';
+  toggle.dataset.toggleUnowned = '1';
+  container.appendChild(toggle);
 
   var clear = document.createElement('button');
   clear.className = 'btn btn-sm btn-outline-secondary';

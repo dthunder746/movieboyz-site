@@ -72,6 +72,20 @@ function init(data) {
     })
     .catch(function() {});
 
+  // ── Unowned-movie visibility ──────────────────────────────────────────
+  var _showUnowned = false;
+
+  function applyTableFilter(activeOwners) {
+    if (!_table) return;
+    if (activeOwners.length > 0) {
+      _table.setFilter('owner', 'in', activeOwners);
+    } else if (!_showUnowned) {
+      _table.setFilter('owner', '!=', 'none');
+    } else {
+      _table.clearFilter();
+    }
+  }
+
   // ── Movie-selection helpers ───────────────────────────────────────────
   var _suppressMovieSelection = false;
   var clearMovieBtn = null; // assigned after buildTable
@@ -101,7 +115,7 @@ function init(data) {
   var ownerFilter = createOwnerFilter(function onChange(activeOwners) {
     // Re-render all linked components whenever the selection changes
     buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
-    buildOwnerFilter(owners, colorMap, activeOwners);
+    buildOwnerFilter(owners, colorMap, activeOwners, _showUnowned);
 
     // Clear movie selection so chart stays consistent with table view
     _suppressMovieSelection = true;
@@ -114,17 +128,15 @@ function init(data) {
 
     updateChartHeading(activeOwners, []);
 
-    if (_table) {
-      if (activeOwners.length === 0) _table.clearFilter();
-      else _table.setFilter('owner', 'in', activeOwners);
-    }
+    applyTableFilter(activeOwners);
   });
 
-  // Initial render (empty selection = show everything)
+  // Initial render (unowned hidden by default)
   buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, []);
   _chart = buildChart(data, owners, colorMap, [], []);
   _table = buildTable(data, owners, colorMap, LATEST_DATE);
-  buildOwnerFilter(owners, colorMap, []);
+  buildOwnerFilter(owners, colorMap, [], _showUnowned);
+  applyTableFilter([]);
 
   // ── Movie selection (Tabulator as source of truth) ────────────────────
   clearMovieBtn = document.getElementById('clear-movie-selection');
@@ -162,6 +174,12 @@ function init(data) {
     ofEl.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-owner]');
       if (btn) { ownerFilter.toggle(btn.dataset.owner); return; }
+      if (e.target.closest('[data-toggle-unowned]')) {
+        _showUnowned = !_showUnowned;
+        buildOwnerFilter(owners, colorMap, ownerFilter.getActive(), _showUnowned);
+        applyTableFilter(ownerFilter.getActive());
+        return;
+      }
       if (e.target.closest('[data-clear]')) ownerFilter.clear();
     });
   }
