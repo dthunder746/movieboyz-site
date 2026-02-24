@@ -39,17 +39,8 @@ if (themeSwitch) {
 // ── Bootstrap ─────────────────────────────────────────────────────────────
 
 function init(data) {
-  // LATEST_DATE — max date with actual gross data, used by table for accuracy
-  var allGrossDates = Object.values(data.movies || {}).flatMap(function(m) {
-    return Object.keys(m.daily_gross || {});
-  });
-  var LATEST_DATE = allGrossDates.length ? allGrossDates.slice().sort().at(-1) : null;
-
-  // LATEST_PROFIT_DATE — max date in owner totals, used by leaderboard
-  var allProfitDates = Object.values(data.owners || {}).flatMap(function(o) {
-    return Object.keys(o.total || {});
-  });
-  var LATEST_PROFIT_DATE = allProfitDates.length ? allProfitDates.slice().sort().at(-1) : null;
+  // Use pre-computed top-level dates from the fetcher
+  var LATEST_PROFIT_DATE = data.latest_profit_date || null;
 
   var owners   = Object.keys(data.owners || {}).sort();
   var colorMap = buildColorMap(owners);
@@ -72,8 +63,10 @@ function init(data) {
     })
     .catch(function() {});
 
-  // ── Unowned-movie visibility ──────────────────────────────────────────
-  var _showUnowned = false;
+  // ── Unowned-movie visibility / week history toggle state ─────────────
+  var _showUnowned     = false;
+  var _showWeekHistory = false;
+  var _hiddenWeekCols  = [];
 
   function applyTableFilter(activeOwners) {
     if (!_table) return;
@@ -115,7 +108,7 @@ function init(data) {
   var ownerFilter = createOwnerFilter(function onChange(activeOwners) {
     // Re-render all linked components whenever the selection changes
     buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
-    buildOwnerFilter(owners, colorMap, activeOwners, _showUnowned);
+    buildOwnerFilter(owners, colorMap, activeOwners, _showUnowned, _showWeekHistory, _hiddenWeekCols.length > 0);
 
     // Clear movie selection so chart stays consistent with table view
     _suppressMovieSelection = true;
@@ -134,8 +127,10 @@ function init(data) {
   // Initial render (unowned hidden by default)
   buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, []);
   _chart = buildChart(data, owners, colorMap, [], []);
-  _table = buildTable(data, owners, colorMap, LATEST_DATE);
-  buildOwnerFilter(owners, colorMap, [], _showUnowned);
+  var tableResult = buildTable(data, colorMap);
+  _table          = tableResult.table;
+  _hiddenWeekCols = tableResult.hiddenWeekCols;
+  buildOwnerFilter(owners, colorMap, [], _showUnowned, _showWeekHistory, _hiddenWeekCols.length > 0);
   applyTableFilter([]);
 
   // ── Movie selection (Tabulator as source of truth) ────────────────────
@@ -176,8 +171,17 @@ function init(data) {
       if (btn) { ownerFilter.toggle(btn.dataset.owner); return; }
       if (e.target.closest('[data-toggle-unowned]')) {
         _showUnowned = !_showUnowned;
-        buildOwnerFilter(owners, colorMap, ownerFilter.getActive(), _showUnowned);
+        buildOwnerFilter(owners, colorMap, ownerFilter.getActive(), _showUnowned, _showWeekHistory, _hiddenWeekCols.length > 0);
         applyTableFilter(ownerFilter.getActive());
+        return;
+      }
+      if (e.target.closest('[data-toggle-week-history]')) {
+        _showWeekHistory = !_showWeekHistory;
+        _hiddenWeekCols.forEach(function(f) {
+          if (_showWeekHistory) _table.showColumn(f);
+          else                  _table.hideColumn(f);
+        });
+        buildOwnerFilter(owners, colorMap, ownerFilter.getActive(), _showUnowned, _showWeekHistory, _hiddenWeekCols.length > 0);
         return;
       }
       if (e.target.closest('[data-clear]')) ownerFilter.clear();

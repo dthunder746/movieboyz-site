@@ -34,17 +34,16 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
     // Selected-movies mode: exactly the rows the user picked in the table
     var selColors = buildMoviePalette(activeMovies.length);
     datasets = activeMovies.map(function(imdb_id, idx) {
-      var movie  = data.movies[imdb_id];
+      var movie      = data.movies[imdb_id];
       if (!movie) return null;
-      var dg     = movie.daily_gross || {};
-      var dgKeys = Object.keys(dg).sort();
-      if (!dgKeys.length) return null; // unreleased — no data yet
+      var profit     = movie.profit || {};
+      var profitKeys = Object.keys(profit).sort();
+      if (!profitKeys.length) return null; // unreleased — no data yet
       var color     = selColors[idx];
-      var budget    = movie.budget || 0;
-      var firstDate = dgKeys[0]; // fetcher ensures this is the zero-anchor date
+      var firstDate = profitKeys[0];
       var points = allDates
         .filter(function(d) { return d >= firstDate; })
-        .map(function(d) { return { x: d, y: (grossAsOf(dg, d) - 2 * budget) / 1e6 }; });
+        .map(function(d) { return { x: d, y: grossAsOf(profit, d) / 1e6 }; });
       return {
         label:            movie.movie_title,
         data:             points,
@@ -63,18 +62,19 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
     // Per-movie mode: each released movie for this owner as its own line
     var soloOwner  = activeOwners[0];
     var ownerMovies = Object.values(data.movies).filter(function(m) {
-      return m.owner === soloOwner && Object.keys(m.daily_gross || {}).length > 0;
+      return m.owner === soloOwner && Object.keys(m.profit || {}).length > 0;
     });
     var movieColors = buildMoviePalette(ownerMovies.length);
 
     datasets = ownerMovies.map(function(movie, idx) {
-      var color     = movieColors[idx];
-      var dg        = movie.daily_gross || {};
-      var budget    = movie.budget || 0;
-      var firstDate = Object.keys(dg).sort()[0];
+      var color      = movieColors[idx];
+      var profit     = movie.profit || {};
+      var profitKeys = Object.keys(profit).sort();
+      if (!profitKeys.length) return null;
+      var firstDate = profitKeys[0];
       var points = allDates
         .filter(function(d) { return d >= firstDate; })
-        .map(function(d) { return { x: d, y: (grossAsOf(dg, d) - 2 * budget) / 1e6 }; });
+        .map(function(d) { return { x: d, y: grossAsOf(profit, d) / 1e6 }; });
       return {
         label:            movie.movie_title,
         data:             points,
@@ -87,7 +87,7 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
         fill:             false,
         spanGaps:         true,
       };
-    });
+    }).filter(Boolean);
 
   } else {
     // 0 owners → show all; 2+ owners → show only selected

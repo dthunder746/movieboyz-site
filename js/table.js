@@ -1,53 +1,33 @@
 import {
   fmt, colorClass,
-  formatShortDate, formatDayMonth, formatWeekLabel, isoWeekBounds,
-  daysRunning, grossAsOf, dailyDelta,
+  formatShortDate, formatDayMonth, isoWeekBounds,
 } from './utils.js';
 
 // ── Tabulator table ───────────────────────────────────────────────────────
-// Returns the Tabulator instance.
-// Tabulator (UMD global) is loaded via <script src> in index.html.
+// Reads pre-computed fields from each movie record (added by the fetcher).
+// Returns { table, hiddenWeekCols } where hiddenWeekCols is an array of
+// field names for week columns that start hidden (all weeks beyond last 4).
 
-export function buildTable(data, owners, colorMap, LATEST_DATE) {
+export function buildTable(data, colorMap) {
 
-  // Collect all dates that appear in any movie's daily_gross
+  // Collect daily-change dates and weekly keys from pre-computed movie fields
   var allDailyDates = new Set();
+  var allWeekKeys   = new Set();
   Object.values(data.movies).forEach(function(m) {
-    Object.keys(m.daily_gross || {}).forEach(function(d) { allDailyDates.add(d); });
+    Object.keys(m.daily_change || {}).forEach(function(d) { allDailyDates.add(d); });
+    Object.keys(m.weekly_gross || {}).forEach(function(w) { allWeekKeys.add(w); });
   });
   var sortedDaily = Array.from(allDailyDates).sort();
-  var last7 = sortedDaily.slice(-7);
-
-  // Build weekly buckets (ISO calendar week Mon–Sun)
-  function isoWeekKey(d) {
-    var dt = new Date(d + 'T00:00:00Z');
-    var day = dt.getUTCDay() || 7;
-    dt.setUTCDate(dt.getUTCDate() + 4 - day); // nearest Thursday
-    var year = dt.getUTCFullYear();
-    var week = Math.ceil(((dt - new Date(Date.UTC(year, 0, 1))) / 86400000 + 1) / 7);
-    return year + '-W' + String(week).padStart(2, '0');
-  }
-
-  var weekBuckets = {};
-  sortedDaily.forEach(function(d) {
-    var key = isoWeekKey(d);
-    if (!weekBuckets[key]) weekBuckets[key] = [];
-    weekBuckets[key].push(d);
-  });
-
-  var allWeeks = Object.keys(weekBuckets).sort();
-  var last4Weeks = allWeeks.slice(-4);
+  var last7       = sortedDaily.slice(-7);
+  var allWeeks    = Array.from(allWeekKeys).sort();
 
   var anyReleased = sortedDaily.length > 0;
 
-  // Build row data
+  // Build row data from pre-computed fields
   var rows = Object.entries(data.movies).map(function(entry) {
     var imdb_id = entry[0], movie = entry[1];
-    var dg = movie.daily_gross || {};
-    var toDateGross  = LATEST_DATE ? grossAsOf(dg, LATEST_DATE) : 0;
-    var budget       = movie.budget || 0;
-    var toDateProfit = toDateGross - 2 * budget;
-    var released     = movie.release_date && LATEST_DATE && movie.release_date <= LATEST_DATE;
+    var dc = movie.daily_change || {};
+    var wg = movie.weekly_gross || {};
 
     var row = {
       imdb_id:        imdb_id,
@@ -55,34 +35,19 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
       owner:          movie.owner,
       pick_type:      movie.pick_type,
       release_date:   movie.release_date || 'TBA',
-      days_running:   released ? daysRunning(movie.release_date, LATEST_DATE) : null,
-      budget:         budget,
-      breakeven:      budget > 0 ? budget * 2 : null,
-      to_date_gross:  released ? toDateGross  : null,
-      to_date_profit: released ? toDateProfit : null,
+      days_running:   movie.days_running != null ? movie.days_running : null,
+      budget:         movie.budget || 0,
+      breakeven:      movie.breakeven   != null ? movie.breakeven   : null,
+      to_date_gross:  movie.gross_td    != null ? movie.gross_td    : null,
+      to_date_profit: movie.profit_td   != null ? movie.profit_td   : null,
     };
 
-    var last7Start = sortedDaily.length - last7.length;
-    last7.forEach(function(d, i) {
-      var prevIdx = last7Start + i - 1;
-      var prevDate = prevIdx >= 0 ? sortedDaily[prevIdx] : null;
-      if (prevDate) {
-        var delta = dailyDelta(dg, d, prevDate);
-        row['daily_' + d] = delta !== null ? Math.max(0, delta) : null;
-      } else {
-        row['daily_' + d] = dg[d] !== undefined ? Math.max(0, dg[d]) : null;
-      }
+    last7.forEach(function(d) {
+      row['daily_' + d] = dc[d] !== undefined ? dc[d] : null;
     });
 
-    last4Weeks.forEach(function(wk) {
-      var dates = weekBuckets[wk];
-      var total = 0, hasData = false;
-      dates.forEach(function(d, i) {
-        if (i === 0) return;
-        var delta = dailyDelta(dg, d, dates[i - 1]);
-        if (delta !== null) { total += Math.max(0, delta); hasData = true; }
-      });
-      row['week_' + wk] = hasData ? total : null;
+    allWeeks.forEach(function(wk) {
+      row['week_' + wk] = wg[wk] !== undefined ? wg[wk] : null;
     });
 
     return row;
@@ -99,6 +64,15 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
     var v = cell.getValue();
     if (v === null || v === undefined) return '<span class="text-neu">—</span>';
     return fmt(v);
+  }
+
+  // Week column title from ISO week key (Mon–Sun date range)
+  function weekTitle(wk) {
+    var b = isoWeekBounds(wk);
+    var sm = b.start.split('-'), em = b.end.split('-');
+    return sm[1] === em[1]
+      ? formatShortDate(b.start) + '–' + parseInt(em[2])
+      : formatShortDate(b.start) + '–' + formatShortDate(b.end);
   }
 
   // Column definitions
@@ -129,28 +103,26 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
     };
   });
 
-  var weeklyCols = last4Weeks.slice().reverse().map(function(wk, i) {
+  // All weeks reversed (most recent first); last 4 visible, older hidden
+  var reversedWeeks = allWeeks.slice().reverse();
+  var weeklyCols = reversedWeeks.map(function(wk, i) {
     var isLatest = (i === 0);
-    var title;
-    if (isLatest) {
-      var b = isoWeekBounds(wk), sm = b.start.split('-'), em = b.end.split('-');
-      title = sm[1] === em[1]
-        ? formatShortDate(b.start) + '–' + parseInt(em[2])
-        : formatShortDate(b.start) + '–' + formatShortDate(b.end);
-    } else {
-      title = formatWeekLabel(weekBuckets[wk]);
-    }
+    var visible  = (i < 4);
     return {
-      title: title,
-      field: 'week_' + wk,
+      title:    weekTitle(wk),
+      field:    'week_' + wk,
       hozAlign: 'right',
       minWidth: 90,
+      visible:  visible,
       cssClass: [i === 0 ? 'week-sep' : null, isLatest ? 'week-latest' : null].filter(Boolean).join(' '),
       formatter: fmtCell,
       formatterParams: { html: true },
       sorter: 'number',
     };
   });
+
+  // Field names for columns that start hidden (all weeks beyond last 4)
+  var hiddenWeekCols = reversedWeeks.slice(4).map(function(wk) { return 'week_' + wk; });
 
   var columns = [
     {
@@ -231,23 +203,26 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
     }
   }
 
-  return new Tabulator('#movie-table', {
-    data:             rows,
-    columns:          columns,
-    layout:           'fitDataFill',
-    responsiveLayout: false,
-    initialSort:      [{ column: 'release_date', dir: 'asc' }],
+  var table = new Tabulator('#movie-table', {
+    data:                  rows,
+    columns:               columns,
+    layout:                'fitDataFill',
+    responsiveLayout:      false,
+    initialSort:           [{ column: 'release_date', dir: 'asc' }],
     columnHeaderVertAlign: 'bottom',
-    resizableColumns: false,
-    selectableRows:   true,
+    resizableColumns:      false,
+    selectableRows:        true,
   });
+
+  return { table: table, hiddenWeekCols: hiddenWeekCols };
 }
 
 // ── Owner filter ──────────────────────────────────────────────────────────
 // Pure render — no internal state. Reads activeOwners array, paints buttons.
 // Clicks are handled via event delegation in app.js.
+// showWeekHistory / hasWeekHistory control the week-history toggle button.
 
-export function buildOwnerFilter(owners, colorMap, activeOwners, showUnowned) {
+export function buildOwnerFilter(owners, colorMap, activeOwners, showUnowned, showWeekHistory, hasWeekHistory) {
   var container = document.getElementById('owner-filter');
   if (!container) return;
   var activeSet = new Set(activeOwners);
@@ -265,11 +240,19 @@ export function buildOwnerFilter(owners, colorMap, activeOwners, showUnowned) {
     container.appendChild(btn);
   });
 
-  var toggle = document.createElement('button');
-  toggle.className = 'btn btn-sm btn-outline-secondary';
-  toggle.textContent = showUnowned ? 'Hide unowned movies' : 'Show unowned movies';
-  toggle.dataset.toggleUnowned = '1';
-  container.appendChild(toggle);
+  var unownedToggle = document.createElement('button');
+  unownedToggle.className = 'btn btn-sm btn-outline-secondary';
+  unownedToggle.textContent = showUnowned ? 'Hide unowned movies' : 'Show unowned movies';
+  unownedToggle.dataset.toggleUnowned = '1';
+  container.appendChild(unownedToggle);
+
+  if (hasWeekHistory) {
+    var weekToggle = document.createElement('button');
+    weekToggle.className = 'btn btn-sm btn-outline-secondary';
+    weekToggle.textContent = showWeekHistory ? 'Hide week history' : 'Show week history';
+    weekToggle.dataset.toggleWeekHistory = '1';
+    container.appendChild(weekToggle);
+  }
 
   var clear = document.createElement('button');
   clear.className = 'btn btn-sm btn-outline-secondary';
