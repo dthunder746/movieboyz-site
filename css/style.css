@@ -82,6 +82,31 @@ body { font-size: 0.9rem; }
 }
 [data-bs-theme="dark"] .tabulator-cell { border-color: rgba(255,255,255,0.06); }
 [data-bs-theme="dark"] .tabulator-frozen-rows-holder { background-color: #212529; }
+[data-bs-theme="dark"] .tabulator-footer,
+[data-bs-theme="dark"] .tabulator-footer .tabulator-page-size,
+[data-bs-theme="dark"] .tabulator-footer .tabulator-paginator {
+  background-color: #2b3035;
+  border-color: #495057;
+  color: #dee2e6;
+}
+[data-bs-theme="dark"] .tabulator-footer .tabulator-page {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #dee2e6;
+}
+[data-bs-theme="dark"] .tabulator-footer .tabulator-page:hover:not(.disabled) {
+  background-color: #495057;
+}
+[data-bs-theme="dark"] .tabulator-footer .tabulator-page.active {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: #fff;
+}
+[data-bs-theme="dark"] .tabulator-footer .tabulator-page-size {
+  background-color: #343a40;
+  color: #dee2e6;
+  border-color: #495057;
+}
 
 /* ── Selected row highlight ─────────────────────────────────────────────── */
 /* ID selector beats Tabulator's !important rules */
