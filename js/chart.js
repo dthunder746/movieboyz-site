@@ -22,12 +22,18 @@ export function buildChart(data, owners, colorMap, activeOwners, activeMovies) {
   var gridCol = theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   var tickCol = theme === 'dark' ? '#aaa' : '#555';
 
-  // Collect all dates across all owners (the canonical x-axis)
+  // Collect all dates: owner totals + every movie profit series.
+  // Movie profit series may start before the owner zero-anchor (e.g. unowned
+  // movies that opened before any league pick), so we must union both sources
+  // or those early dates will be silently dropped from the chart.
   var dateSet = new Set();
   owners.forEach(function(o) {
     Object.keys((data.owners[o] && data.owners[o].total) || {}).forEach(function(d) {
       dateSet.add(d);
     });
+  });
+  Object.values(data.movies || {}).forEach(function(m) {
+    Object.keys(m.profit || {}).forEach(function(d) { dateSet.add(d); });
   });
   var allDates = Array.from(dateSet).sort();
 
