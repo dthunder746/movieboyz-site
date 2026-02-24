@@ -154,53 +154,55 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
   var columns = [
     {
       title: 'Movie Details',
-      columns: [titleCol],
-    },
-    {
-      title: 'Opening Date',
-      field: 'release_date',
-      minWidth: 130,
-      sorter: 'string',
-    },
-    {
-      title: 'Days',
-      field: 'days_running',
-      hozAlign: 'right',
-      minWidth: 72,
-      formatter: function(cell) {
-        var v = cell.getValue();
-        return v !== null && v !== undefined ? String(v) : '<span class="text-neu">—</span>';
-      },
-      formatterParams: { html: true },
-      sorter: 'number',
-    },
-    {
-      title: 'Owner',
-      field: 'owner',
-      minWidth: 100,
-      formatter: function(cell) {
-        var o = cell.getValue();
-        return '<span class="owner-dot" style="background:' + (colorMap[o] || '#888') + '"></span>' + o;
-      },
-      formatterParams: { html: true },
-    },
-    {
-      title: 'Gross TD',
-      field: 'to_date_gross',
-      hozAlign: 'right',
-      minWidth: 95,
-      formatter: fmtGross,
-      formatterParams: { html: true },
-      sorter: 'number',
-    },
-    {
-      title: 'Profit TD',
-      field: 'to_date_profit',
-      hozAlign: 'right',
-      minWidth: 95,
-      formatter: fmtCell,
-      formatterParams: { html: true },
-      sorter: 'number',
+      columns: [
+        titleCol,
+        {
+          title: 'Opening Date',
+          field: 'release_date',
+          minWidth: 130,
+          sorter: 'string',
+        },
+        {
+          title: 'Days',
+          field: 'days_running',
+          hozAlign: 'right',
+          minWidth: 72,
+          formatter: function(cell) {
+            var v = cell.getValue();
+            return v !== null && v !== undefined ? String(v) : '<span class="text-neu">—</span>';
+          },
+          formatterParams: { html: true },
+          sorter: 'number',
+        },
+        {
+          title: 'Owner',
+          field: 'owner',
+          minWidth: 100,
+          formatter: function(cell) {
+            var o = cell.getValue();
+            return '<span class="owner-dot" style="background:' + (colorMap[o] || '#888') + '"></span>' + o;
+          },
+          formatterParams: { html: true },
+        },
+        {
+          title: 'Gross TD',
+          field: 'to_date_gross',
+          hozAlign: 'right',
+          minWidth: 95,
+          formatter: fmtGross,
+          formatterParams: { html: true },
+          sorter: 'number',
+        },
+        {
+          title: 'Profit TD',
+          field: 'to_date_profit',
+          hozAlign: 'right',
+          minWidth: 95,
+          formatter: fmtCell,
+          formatterParams: { html: true },
+          sorter: 'number',
+        },
+      ],
     },
   ];
 
@@ -227,6 +229,7 @@ export function buildTable(data, owners, colorMap, LATEST_DATE) {
     initialSort:      [{ column: 'release_date', dir: 'asc' }],
     columnHeaderVertAlign: 'bottom',
     resizableColumns: false,
+    selectableRows:   true,
   });
 }
 
