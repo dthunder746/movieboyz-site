@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-02 05:44:23",
+  "fetched_at": "2026-06-02 07:44:39",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-06-01T21-44-14Z",
+  "last_processed_snapshot": "2026-06-01T23-44-29Z",
   "latest_date": "2026-05-31",
   "latest_profit_date": "2026-05-31",
   "movies": {
@@ -27515,7 +27515,7 @@
         "2026-05-28": 750000,
         "2026-05-29": 2000000,
         "2026-05-30": 4750000,
-        "2026-05-31": 0
+        "2026-05-31": -146927
       },
       "daily_gross": {
         "2026-04-13": 0,
@@ -27566,12 +27566,12 @@
         "2026-05-28": 750000,
         "2026-05-29": 2750000,
         "2026-05-30": 7500000,
-        "2026-05-31": 7500000
+        "2026-05-31": 7353073
       },
       "days_running": 2,
       "draft_pick": null,
       "estimated_budget": false,
-      "gross_td": 7500000,
+      "gross_td": 7353073,
       "movie_title": "The Breadwinner",
       "owner": "none",
       "pick_type": null,
@@ -27624,9 +27624,9 @@
         "2026-05-28": -49250000,
         "2026-05-29": -47250000,
         "2026-05-30": -42500000,
-        "2026-05-31": -42500000
+        "2026-05-31": -42646927
       },
-      "profit_td": -42500000,
+      "profit_td": -42646927,
       "ratings": {
         "fetched_at": "2026-06-02",
         "imdb": {
@@ -27662,7 +27662,7 @@
       "released_digital": null,
       "season": "SUMMER",
       "weekly_gross": {
-        "2026-W22": 7500000
+        "2026-W22": 7353073
       },
       "year": 2026
     },
