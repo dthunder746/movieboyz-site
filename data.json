@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-02 07:44:39",
+  "fetched_at": "2026-06-02 08:44:47",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-06-01T23-44-29Z",
+  "last_processed_snapshot": "2026-06-02T00-44-37Z",
   "latest_date": "2026-05-31",
   "latest_profit_date": "2026-05-31",
   "movies": {
@@ -21887,8 +21887,8 @@
       "year": 2026
     },
     "tt32547691": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 40000000,
+      "budget": 20000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -21993,7 +21993,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 5811480,
       "movie_title": "Pressure",
       "owner": "none",
@@ -22045,11 +22045,11 @@
         "2026-05-26": 0,
         "2026-05-27": 0,
         "2026-05-28": 0,
-        "2026-05-29": 2460000,
-        "2026-05-30": 5750000,
-        "2026-05-31": 5811480
+        "2026-05-29": -37540000,
+        "2026-05-30": -34250000,
+        "2026-05-31": -34188520
       },
-      "profit_td": 5811480,
+      "profit_td": -34188520,
       "ratings": {
         "fetched_at": "2026-06-02",
         "imdb": {
