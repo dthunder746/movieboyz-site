@@ -460,6 +460,7 @@ body { font-size: 0.9rem; }
   align-items: center;
   justify-content: center;
   gap: 2px;
+  white-space: nowrap;
 }
 
 .scorecard-movies {
@@ -616,7 +617,7 @@ body { font-size: 0.9rem; }
   }
   .top-panel #weekend-strip {
     flex: 1;
-    min-width: 450px;
+    min-width: 400px;
   }
   .top-panel #info-cards {
     width: 450px;
