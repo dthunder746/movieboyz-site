@@ -1585,3 +1585,191 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
 @media (max-width: 380px) {
   .draft-whatif-banner-label { display: none; }
 }
+
+.col-movie-title .tabulator-cell {
+  overflow: hidden;
+}
+.col-movie-title .movie-title-text {
+  display: inline-block;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.compact-delta {
+  font-size: 0.85em;
+  color: var(--bs-secondary-color);
+  margin-left: 2px;
+}
+.col-owner .owner-cell-initial,
+.col-owner .owner-cell-dotonly {
+  display: none;
+}
+[data-compact-tier="initial"] .col-owner .owner-cell-full { display: none; }
+[data-compact-tier="initial"] .col-owner .owner-cell-initial { display: inline; }
+[data-compact-tier="dotonly"] .col-owner .owner-cell-full,
+[data-compact-tier="dotonly"] .col-owner .owner-cell-initial { display: none; }
+[data-compact-tier="dotonly"] .col-owner .owner-cell-dotonly { display: inline; }
+
+.mb-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  background: var(--bs-dark);
+  color: var(--bs-light);
+  border: 1px solid var(--bs-border-color);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  max-width: 90vw;
+  z-index: 2000;
+  pointer-events: none;
+}
+.mb-toast--show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.movie-card {
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+.movie-card.is-selected {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: -2px;
+}
+.movie-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.movie-card-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.movie-card-title .movie-title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.movie-card-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.movie-card-sub {
+  color: var(--bs-secondary-color);
+  font-size: 0.78rem;
+  margin-bottom: 8px;
+}
+.movie-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.movie-card-stats .stat-label {
+  color: var(--bs-secondary-color);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+.movie-card-stats .stat-val { font-size: 0.92rem; }
+.movie-card-stats .stat-delta {
+  color: var(--bs-secondary-color);
+  font-size: 0.78rem;
+}
+
+.movie-card-plot-btn {
+  background: transparent;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--bs-secondary-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+}
+.movie-card-plot-btn:hover {
+  color: var(--bs-body-color);
+  background: var(--bs-tertiary-bg);
+}
+.movie-card-extra {
+  border-top: 1px solid var(--bs-border-color);
+  margin-top: 8px;
+  padding-top: 8px;
+  font-size: 0.85rem;
+}
+.movie-card-extra .extra-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.movie-card-extra .extra-label {
+  color: var(--bs-secondary-color);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Rounded card-style frame for the Compact and Detailed tables.
+   Tabulator 6.x applies the .tabulator class to the #movie-table element
+   itself, so this is a same-element selector, not a descendant one. */
+#movie-table.tabulator {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#table-surface { position: relative; }
+
+#render-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  pointer-events: none;
+}
+#render-overlay.is-visible { opacity: 1; }
+/* Repeating row-stripes fill the whole surface, so the placeholder mimics a
+   table of any height. The pulse animates this layer's opacity, independent of
+   the overlay's fade-in/out opacity. */
+#render-overlay .skeleton-fill {
+  position: absolute;
+  inset: 11px 12px;
+  border-radius: 6px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--bs-tertiary-bg) 0, var(--bs-tertiary-bg) 32px,
+    transparent 32px, transparent 42px
+  );
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.85; }
+}

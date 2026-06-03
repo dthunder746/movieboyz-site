@@ -3,10 +3,14 @@ import { buildColorMap } from './palettes.js';
 import { createOwnerFilter } from './filter.js';
 import { buildLeaderboard } from './leaderboard.js';
 import { buildChart } from './chart.js';
-import { buildTable, buildOwnerFilter } from './table.js';
+import { buildDetailedTable, buildCompactTable, buildOwnerFilter } from './table.js';
 import { buildWeekendStrip } from './weekend-strip.js';
 import { buildInfoCards } from './info-cards.js';
 import { applyOverrides } from './overrides.js';
+import { createSelection } from './selection.js';
+import { initialMode, createModeSwitcher, showNarrowToast } from './table-mode.js';
+import { applyCompactResponsive } from './compact-responsive.js';
+import { buildCards } from './table-cards.js';
 
 // ── Module-level chart / table instances ─────────────────────────────────
 var _chart = null;
@@ -189,6 +193,7 @@ function init(data) {
     _suppressMovieSelection = true;
     if (_table) _table.deselectRow();
     _suppressMovieSelection = false;
+    selection.clear();
 
     if (_table) _table.setSort(_initialSort);
 
@@ -244,6 +249,7 @@ function init(data) {
     _suppressMovieSelection = true;
     if (_table) _table.deselectRow();
     _suppressMovieSelection = false;
+    selection.clear();
     if (clearMovieBtn) clearMovieBtn.classList.add('d-none');
 
     if (_chart) _chart.destroy();
@@ -259,18 +265,11 @@ function init(data) {
   buildWeekendStrip(data, owners, colorMap);
   buildInfoCards(data, colorMap);
   _chart = buildChart(data, owners, colorMap, [], []);
-  var built = buildTable(data, colorMap);
-  _table = built.table;
-  var _initialSort = built.initialSort;
-  buildOwnerFilter(owners, colorMap, [], _showUnowned);
-  applyFilters();
 
-  // ── Movie selection (Tabulator as source of truth) ────────────────────
+  // ── Movie selection (shared set as source of truth) ───────────────────
   clearMovieBtn = document.getElementById('clear-movie-selection');
 
-  _table.on('rowSelectionChanged', function(selectedData) {
-    if (_suppressMovieSelection) return;
-    var activeMovieIds = selectedData.map(function(d) { return d.imdb_id; });
+  var selection = createSelection(function onSelectionChange(activeMovieIds) {
     if (_chart) _chart.destroy();
     _chart = buildChart(data, owners, colorMap, ownerFilter.getActive(), activeMovieIds);
     updateChartHeading(ownerFilter.getActive(), activeMovieIds);
@@ -278,11 +277,172 @@ function init(data) {
       if (activeMovieIds.length > 0) clearMovieBtn.classList.remove('d-none');
       else                           clearMovieBtn.classList.add('d-none');
     }
+    if (_cards) _cards.syncSelection();
+  });
+
+  function updateHelperText(mode) {
+    var el = document.getElementById('table-helper');
+    if (!el) return;
+    el.textContent = (mode === 'cards')
+      ? 'Tap to expand, long-press to plot on chart'
+      : 'Click rows to plot on chart';
+  }
+
+  function applyFiltersToCards() {
+    // Plan 2 will fold this into the shared filter pipeline.
+    if (_cards) _cards.rerender();
+  }
+
+  function wireTableSelection() {
+    if (!_table) return;
+    _table.on('rowSelectionChanged', function(selectedData) {
+      if (_suppressMovieSelection) return;
+      selection.set(selectedData.map(function(d) { return d.imdb_id; }));
+    });
+    syncSelectionIntoTable();
+  }
+
+  function syncSelectionIntoTable() {
+    if (!_table) return;
+    _suppressMovieSelection = true;
+    _table.deselectRow();
+    var ids = selection.toArray();
+    if (ids.length > 0) {
+      ids.forEach(function(id) {
+        var row = _table.getRow(id);
+        if (row) row.select();
+      });
+    }
+    _suppressMovieSelection = false;
+  }
+
+  function renderTable(mode) {
+    var wrapperEl = document.getElementById('table-wrapper');
+    var surfaceEl = document.getElementById('table-surface');
+    var overlay = document.getElementById('render-overlay');
+    var scrollY = window.scrollY;
+    var isSwitch = !!(_table || _cards);
+
+    // Reserve the current surface height and fade in a skeleton during the swap
+    // so the page doesn't collapse (and yank the scroll position) while
+    // Tabulator re-renders asynchronously.
+    if (isSwitch && surfaceEl) {
+      var prevH = surfaceEl.offsetHeight;
+      if (prevH) surfaceEl.style.minHeight = prevH + 'px';
+      if (overlay) {
+        overlay.classList.remove('d-none');
+        void overlay.offsetWidth; // reflow so the opacity transition runs
+        overlay.classList.add('is-visible');
+      }
+    }
+
+    var SHOW_MIN = 220; // keep the skeleton up long enough to read as a transition
+    var shownAt = performance.now();
+    var swapDone = false;
+    function finishSwap() {
+      if (swapDone) return;
+      var elapsed = performance.now() - shownAt;
+      if (isSwitch && elapsed < SHOW_MIN) {
+        setTimeout(finishSwap, SHOW_MIN - elapsed);
+        return;
+      }
+      swapDone = true;
+      if (surfaceEl) surfaceEl.style.minHeight = '';
+      if (isSwitch) window.scrollTo(0, scrollY);
+      if (overlay) {
+        overlay.classList.remove('is-visible');
+        setTimeout(function() { overlay.classList.add('d-none'); }, 200);
+      }
+    }
+
+    if (_compactRO) { _compactRO.disconnect(); _compactRO = null; }
+    if (_overrideRO) { _overrideRO.disconnect(); _overrideRO = null; }
+    if (_table) { _table.destroy(); _table = null; }
+    if (_cards) { _cards.destroy(); _cards = null; }
+    var tableEl = document.getElementById('movie-table');
+    var cardsEl = document.getElementById('movie-cards');
+    tableEl.classList.toggle('d-none', mode === 'cards');
+    cardsEl.classList.toggle('d-none', mode !== 'cards');
+
+    if (mode === 'cards') {
+      _cards = buildCards(data, colorMap, selection);
+      _renderedMode = mode;
+      applyFiltersToCards();
+      updateHelperText(mode);
+      // While auto-overriding Compact under 440px, watch for a widen back.
+      if (_overrideActive) {
+        _overrideRO = new ResizeObserver(function() {
+          if (wrapperEl.clientWidth >= 440) {
+            _overrideActive = false;
+            renderTable('compact');
+          }
+        });
+        _overrideRO.observe(wrapperEl);
+      }
+      requestAnimationFrame(finishSwap);
+      return;
+    }
+
+    var built;
+    if (mode === 'compact') {
+      built = buildCompactTable(data, colorMap);
+      _compactRO = applyCompactResponsive(built.table, built.weekFields, {
+        onNarrow: function() {
+          if (_savedMode !== 'compact') return;
+          showNarrowToast();
+          _overrideActive = true;
+          renderTable('cards');
+        },
+        onWidened: function() {
+          if (_savedMode !== 'compact' || !_overrideActive) return;
+          _overrideActive = false;
+          renderTable('compact');
+        },
+      });
+    } else {
+      built = buildDetailedTable(data, colorMap);
+    }
+    _table = built.table;
+    _initialSort = built.initialSort;
+    _renderedMode = mode;
+    wireTableSelection();
+    applyFilters();
+    updateHelperText(mode);
+
+    _table.on('tableBuilt', function() { requestAnimationFrame(finishSwap); });
+    // Fallback in case tableBuilt already fired; finishSwap is idempotent.
+    setTimeout(finishSwap, 250);
+  }
+
+  var _compactRO = null;
+  var _overrideRO = null;
+  var _cards = null;
+  var _initialSort = null;
+  var _savedMode = initialMode();
+  var _renderedMode = _savedMode;
+  var _overrideActive = false;
+
+  renderTable(_savedMode);
+  buildOwnerFilter(owners, colorMap, [], _showUnowned);
+  applyFilters();
+
+  createModeSwitcher({
+    initial: _savedMode,
+    onChange: function(mode) {
+      _savedMode = mode;
+      _overrideActive = false;
+      renderTable(mode);
+    },
   });
 
   if (clearMovieBtn) {
     clearMovieBtn.addEventListener('click', function() {
-      if (_table) _table.deselectRow();
+      selection.clear();
+      if (_table) {
+        _suppressMovieSelection = true;
+        _table.deselectRow();
+        _suppressMovieSelection = false;
+      }
     });
   }
 

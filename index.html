@@ -95,11 +95,26 @@
 
   <!-- Movie table -->
   <div id="table-wrapper">
-    <div class="d-flex align-items-center justify-content-between mb-1">
-      <span class="text-muted" style="font-size:0.78rem">Click rows to plot on chart</span>
-      <button id="clear-movie-selection" class="btn btn-sm btn-outline-secondary py-0 d-none" style="font-size:0.75rem">Reset</button>
+    <div class="d-flex align-items-center justify-content-between mb-1 gap-2 flex-wrap">
+      <div class="btn-group btn-group-sm" role="group" aria-label="View mode">
+        <button class="btn btn-outline-secondary" data-mode="cards" type="button">Cards</button>
+        <button class="btn btn-outline-secondary" data-mode="compact" type="button">Compact</button>
+        <button class="btn btn-outline-secondary" data-mode="detailed" type="button">Detailed</button>
+      </div>
+      <select id="cards-sort" class="form-select form-select-sm d-none" style="width:auto" aria-label="Sort cards by">
+        <option value="release_date">Released</option>
+        <option value="to_date_profit">Profit</option>
+        <option value="roi">ROI</option>
+        <option value="this_week">This week</option>
+      </select>
+      <span id="table-helper" class="text-muted ms-auto" style="font-size:0.78rem">Click rows to plot on chart</span>
+      <button id="clear-movie-selection" class="btn btn-sm btn-outline-secondary py-0 d-none" style="font-size:0.75rem">Clear selection</button>
     </div>
-    <div id="movie-table"></div>
+    <div id="table-surface">
+      <div id="movie-table"></div>
+      <div id="movie-cards" class="d-none"></div>
+      <div id="render-overlay" class="d-none" aria-hidden="true"><div class="skeleton-fill"></div></div>
+    </div>
     <p id="daily-neg-footnote" class="d-none">* Negative daily gross values are not true negatives. They reflect revised estimates for earlier days in the week, superseded by more accurate figures.</p>
   </div>
 
