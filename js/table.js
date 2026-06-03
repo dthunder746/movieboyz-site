@@ -592,38 +592,3 @@ export function buildCompactTable(data, colorMap) {
     initialSort: initialSort,
   };
 }
-
-// ── Owner filter ──────────────────────────────────────────────────────────
-// Pure render — no internal state. Reads activeOwners array, paints buttons.
-// Clicks are handled via event delegation in app.js.
-
-export function buildOwnerFilter(owners, colorMap, activeOwners, showUnowned) {
-  var container = document.getElementById('owner-filter');
-  if (!container) return;
-  var activeSet = new Set(activeOwners);
-
-  container.innerHTML = '';
-
-  owners.forEach(function(owner) {
-    var active = activeSet.has(owner);
-    var btn = document.createElement('button');
-    btn.className = 'btn btn-sm ' + (active ? 'btn-primary' : 'btn-outline-secondary');
-    if (active) btn.style.backgroundColor = colorMap[owner];
-    btn.style.borderColor = colorMap[owner];
-    btn.dataset.owner = owner;
-    btn.innerHTML = '<span class="owner-dot" style="background:' + colorMap[owner] + '"></span>' + owner;
-    container.appendChild(btn);
-  });
-
-  var unownedToggle = document.createElement('button');
-  unownedToggle.className = 'btn btn-sm btn-outline-secondary';
-  unownedToggle.textContent = showUnowned ? 'Hide unowned movies' : 'Show unowned movies';
-  unownedToggle.dataset.toggleUnowned = '1';
-  container.appendChild(unownedToggle);
-
-  var clear = document.createElement('button');
-  clear.className = 'btn btn-sm btn-outline-secondary';
-  clear.textContent = 'Reset';
-  clear.dataset.clear = '1';
-  container.appendChild(clear);
-}

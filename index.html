@@ -82,20 +82,16 @@
     <canvas id="profitChart"></canvas>
   </div>
 
-  <!-- Owner filter -->
-  <div id="owner-filter" class="d-flex flex-wrap gap-2 align-items-center mb-2"></div>
-
-  <!-- Release date filter -->
-  <div id="date-filter" class="d-flex align-items-center gap-2 mb-2" style="font-size:0.82rem">
-    <span class="text-muted">Release:</span>
-    <input type="date" id="date-from" class="form-control form-control-sm" style="width:auto" aria-label="From date">
-    <span class="text-muted">to</span>
-    <input type="date" id="date-to" class="form-control form-control-sm" style="width:auto" aria-label="To date">
-  </div>
-
   <!-- Movie table -->
   <div id="table-wrapper">
-    <div class="d-flex align-items-center justify-content-between mb-1 gap-2 flex-wrap">
+    <div id="toolbar" class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+      <button id="filters-toggle" class="btn btn-sm btn-outline-secondary" type="button" aria-expanded="false" aria-controls="filters-panel">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filters
+        <span id="filters-badge" class="badge bg-primary ms-1 d-none">0</span>
+      </button>
+      <div id="filter-chips" class="d-flex gap-2 flex-wrap"></div>
+      <span class="ms-auto"></span>
       <div class="btn-group btn-group-sm" role="group" aria-label="View mode">
         <button class="btn btn-outline-secondary" data-mode="cards" type="button">Cards</button>
         <button class="btn btn-outline-secondary" data-mode="compact" type="button">Compact</button>
@@ -107,9 +103,10 @@
         <option value="roi">ROI</option>
         <option value="this_week">This week</option>
       </select>
-      <span id="table-helper" class="text-muted ms-auto" style="font-size:0.78rem">Click rows to plot on chart</span>
+      <span id="table-helper" class="text-muted" style="font-size:0.78rem">Click rows to plot on chart</span>
       <button id="clear-movie-selection" class="btn btn-sm btn-outline-secondary py-0 d-none" style="font-size:0.75rem">Clear selection</button>
     </div>
+    <div id="filters-panel" class="d-none"></div>
     <div id="table-surface">
       <div id="movie-table"></div>
       <div id="movie-cards" class="d-none"></div>

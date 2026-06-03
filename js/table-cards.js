@@ -115,7 +115,7 @@ function compareBy(field) {
   };
 }
 
-export function buildCards(data, colorMap, selection) {
+export function buildCards(data, colorMap, selection, visibleIds) {
   var container = document.getElementById('movie-cards');
   if (!container) return null;
 
@@ -126,13 +126,21 @@ export function buildCards(data, colorMap, selection) {
     sortEl.classList.remove('d-none');
   }
 
-  var rows = buildRows(data);
+  var allRows = buildRows(data);
 
   // Profit rank across all movies that have profit data.
-  var ranked = rows.filter(function(r) { return r.to_date_profit != null; })
+  var ranked = allRows.filter(function(r) { return r.to_date_profit != null; })
     .slice().sort(function(a, b) { return b.to_date_profit - a.to_date_profit; });
   ranked.forEach(function(r, i) { r.rank = i + 1; });
   var rankTotal = ranked.length;
+
+  var _visibleIds = visibleIds || null;
+  function filterRows() {
+    if (!_visibleIds) return allRows.slice();
+    var set = new Set(_visibleIds);
+    return allRows.filter(function(r) { return set.has(r.imdb_id); });
+  }
+  var rows = filterRows();
 
   function render() {
     rows.sort(compareBy(sortField));
@@ -197,7 +205,9 @@ export function buildCards(data, colorMap, selection) {
         +   '</div>'
         + '</div>';
     }).join('');
-    container.innerHTML = html;
+    container.innerHTML = rows.length
+      ? html
+      : '<div class="cards-empty text-muted">No movies match the current filters.</div>';
   }
 
   render();
@@ -262,6 +272,11 @@ export function buildCards(data, colorMap, selection) {
 
   return {
     rerender: render,
+    setVisibleIds: function(ids) {
+      _visibleIds = ids || null;
+      rows = filterRows();
+      render();
+    },
     syncSelection: function() {
       var ids = selection.toArray();
       Array.prototype.forEach.call(container.querySelectorAll('.movie-card'), function(el) {

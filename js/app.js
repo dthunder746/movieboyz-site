@@ -1,9 +1,10 @@
 import { fmtTimestamp, formatDayMonth, fmtRelativeAgo, getWeekdayAbbr } from './utils.js';
 import { buildColorMap } from './palettes.js';
-import { createOwnerFilter } from './filter.js';
+import { createFilterState } from './filters.js';
+import { createToolbar } from './toolbar.js';
 import { buildLeaderboard } from './leaderboard.js';
 import { buildChart } from './chart.js';
-import { buildDetailedTable, buildCompactTable, buildOwnerFilter } from './table.js';
+import { buildDetailedTable, buildCompactTable } from './table.js';
 import { buildWeekendStrip } from './weekend-strip.js';
 import { buildInfoCards } from './info-cards.js';
 import { applyOverrides } from './overrides.js';
@@ -145,72 +146,12 @@ function init(data) {
     }
   }
 
-  // ── Unowned-movie visibility toggle state ────────────────────────────
-  var _showUnowned = false;
   var _suppressMovieSelection = false;
-  var _resetting = false;
 
-  function applyFilters() {
+  function applyTableFilter(visibleIds) {
     if (!_table) return;
-    var activeOwners = ownerFilter.getActive();
-    var fromEl = document.getElementById('date-from');
-    var toEl   = document.getElementById('date-to');
-    var from   = fromEl ? fromEl.value : '';
-    var to     = toEl   ? toEl.value   : '';
-    var hasDateFilter = !!(from || to);
-
-    if (activeOwners.length === 0 && _showUnowned && !hasDateFilter) {
-      _table.clearFilter();
-      return;
-    }
-
-    _table.setFilter(function(data) {
-      // Owner filter
-      if (activeOwners.length > 0) {
-        if (activeOwners.indexOf(data.owner) === -1) return false;
-      } else if (!_showUnowned) {
-        if (data.owner === 'none') return false;
-      }
-
-      // Date filter
-      if (hasDateFilter) {
-        var d = data.release_date;
-        if (!d || d === 'TBA') return false;
-        if (from && d < from) return false;
-        if (to   && d > to)   return false;
-      }
-
-      return true;
-    });
-  }
-
-  function resetAll() {
-    _resetting = true;
-    ownerFilter.clear();
-    _showUnowned = false;
-
-    _suppressMovieSelection = true;
-    if (_table) _table.deselectRow();
-    _suppressMovieSelection = false;
-    selection.clear();
-
-    if (_table) _table.setSort(_initialSort);
-
-    var dateFromEl = document.getElementById('date-from');
-    var dateToEl   = document.getElementById('date-to');
-    if (dateFromEl) dateFromEl.value = '';
-    if (dateToEl)   dateToEl.value   = '';
-
-    buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, []);
-    buildOwnerFilter(owners, colorMap, [], false);
-    applyFilters();
-
-    if (_chart) _chart.destroy();
-    _chart = buildChart(data, owners, colorMap, [], []);
-    updateChartHeading([], []);
-
-    if (clearMovieBtn) clearMovieBtn.classList.add('d-none');
-    _resetting = false;
+    var set = new Set(visibleIds);
+    _table.setFilter(function(d) { return set.has(d.imdb_id); });
   }
 
   // ── Movie-selection helpers ───────────────────────────────────────────
@@ -237,27 +178,31 @@ function init(data) {
     }
   }
 
-  // ── Owner filter state ─────────────────────────────────────────────────
-  var ownerFilter = createOwnerFilter(function onChange(activeOwners) {
-    if (_resetting) return;
-    // Re-render all linked components whenever the selection changes
-    buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
-    buildOwnerFilter(owners, colorMap, activeOwners, _showUnowned);
-
-    // Clear movie selection so chart stays consistent with table view
-    _suppressMovieSelection = true;
-    if (_table) _table.deselectRow();
-    _suppressMovieSelection = false;
-    selection.clear();
-    if (clearMovieBtn) clearMovieBtn.classList.add('d-none');
-
-    if (_chart) _chart.destroy();
-    _chart = buildChart(data, owners, colorMap, activeOwners, []);
-
-    updateChartHeading(activeOwners, []);
-
-    applyFilters();
+  // ── Filter state + toolbar ─────────────────────────────────────────────
+  var filters = createFilterState({
+    onChange: function(snap) { rerenderForFilters(snap); },
   });
+
+  var toolbar = createToolbar({
+    filters: filters,
+    owners: owners,
+    colorMap: colorMap,
+  });
+
+  function rerenderForFilters(snap) {
+    toolbar.refresh();
+    var visibleIds = filters.filter(data.movies, data.latest_date);
+    if (_renderedMode === 'cards') {
+      if (_cards) _cards.setVisibleIds(visibleIds);
+    } else if (_table) {
+      applyTableFilter(visibleIds);
+    }
+    var activeOwners = snap.owners || [];
+    buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
+    if (_chart) _chart.destroy();
+    _chart = buildChart(data, owners, colorMap, activeOwners, selection.toArray());
+    updateChartHeading(activeOwners, selection.toArray());
+  }
 
   // Initial render (unowned hidden by default)
   buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, []);
@@ -269,9 +214,10 @@ function init(data) {
   clearMovieBtn = document.getElementById('clear-movie-selection');
 
   var selection = createSelection(function onSelectionChange(activeMovieIds) {
+    var activeOwners = filters.snapshot().owners || [];
     if (_chart) _chart.destroy();
-    _chart = buildChart(data, owners, colorMap, ownerFilter.getActive(), activeMovieIds);
-    updateChartHeading(ownerFilter.getActive(), activeMovieIds);
+    _chart = buildChart(data, owners, colorMap, activeOwners, activeMovieIds);
+    updateChartHeading(activeOwners, activeMovieIds);
     if (clearMovieBtn) {
       if (activeMovieIds.length > 0) clearMovieBtn.classList.remove('d-none');
       else                           clearMovieBtn.classList.add('d-none');
@@ -285,11 +231,6 @@ function init(data) {
     el.textContent = (mode === 'cards')
       ? 'Tap to expand, long-press to plot on chart'
       : 'Click rows to plot on chart';
-  }
-
-  function applyFiltersToCards() {
-    // Plan 2 will fold this into the shared filter pipeline.
-    if (_cards) _cards.rerender();
   }
 
   function wireTableSelection() {
@@ -362,10 +303,11 @@ function init(data) {
     tableEl.classList.toggle('mode-compact', mode === 'compact');
     tableEl.classList.toggle('mode-detailed', mode === 'detailed');
 
+    var visibleIds = filters.filter(data.movies, data.latest_date);
+
     if (mode === 'cards') {
-      _cards = buildCards(data, colorMap, selection);
+      _cards = buildCards(data, colorMap, selection, visibleIds);
       _renderedMode = mode;
-      applyFiltersToCards();
       updateHelperText(mode);
       requestAnimationFrame(finishSwap);
       return;
@@ -381,7 +323,7 @@ function init(data) {
     _initialSort = built.initialSort;
     _renderedMode = mode;
     wireTableSelection();
-    applyFilters();
+    applyTableFilter(visibleIds);
     updateHelperText(mode);
 
     _table.on('tableBuilt', function() { requestAnimationFrame(finishSwap); });
@@ -395,8 +337,7 @@ function init(data) {
   var _renderedMode = _savedMode;
 
   renderTable(_savedMode);
-  buildOwnerFilter(owners, colorMap, [], _showUnowned);
-  applyFilters();
+  toolbar.refresh();
 
   createModeSwitcher({
     initial: _savedMode,
@@ -417,33 +358,12 @@ function init(data) {
     });
   }
 
-  var dateFromEl = document.getElementById('date-from');
-  var dateToEl   = document.getElementById('date-to');
-  if (dateFromEl) dateFromEl.addEventListener('change', applyFilters);
-  if (dateToEl)   dateToEl.addEventListener('change', applyFilters);
-
   // Leaderboard — event delegation (survives innerHTML re-renders)
   var lbEl = document.getElementById('leaderboard');
   if (lbEl) {
     lbEl.addEventListener('click', function(e) {
       var card = e.target.closest('[data-owner]');
-      if (card) ownerFilter.toggle(card.dataset.owner);
-    });
-  }
-
-  // Owner filter — event delegation
-  var ofEl = document.getElementById('owner-filter');
-  if (ofEl) {
-    ofEl.addEventListener('click', function(e) {
-      var btn = e.target.closest('[data-owner]');
-      if (btn) { ownerFilter.toggle(btn.dataset.owner); return; }
-      if (e.target.closest('[data-toggle-unowned]')) {
-        _showUnowned = !_showUnowned;
-        buildOwnerFilter(owners, colorMap, ownerFilter.getActive(), _showUnowned);
-        applyFilters();
-        return;
-      }
-      if (e.target.closest('[data-clear]')) { resetAll(); return; }
+      if (card) filters.toggleOwner(card.dataset.owner);
     });
   }
 
