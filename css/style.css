@@ -1,8 +1,23 @@
 body { font-size: 0.9rem; }
 
+.chart-card {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+}
+
+.chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
 #chart-wrapper {
   position: relative;
   height: 350px;
+  padding: 10px 12px 12px;
 }
 @media (max-width: 576px) {
   #chart-wrapper { height: 33vh; min-height: 150px; }
@@ -1876,17 +1891,63 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
 }
 
 /* ── Filters toolbar ──────────────────────────────────────────────────── */
-#filter-chips:empty { display: none; }
+/* The filter panel and the chips row both fold open/closed: height (plus
+   padding/margin/opacity) animate between 0 and the natural size, set inline
+   from JS. Open is a touch slower than close; these rules just define timing.
+   overflow:hidden clips content as it folds. Chips display is flex (set here,
+   not via a utility) so the .d-none toggle can actually hide the row. */
+#filter-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.fold-opening {
+  transition: height 0.2s ease, padding-top 0.2s ease, padding-bottom 0.2s ease,
+              margin-bottom 0.2s ease, opacity 0.2s ease;
+}
+.fold-closing {
+  transition: height 0.15s ease, padding-top 0.15s ease, padding-bottom 0.15s ease,
+              margin-bottom 0.15s ease, opacity 0.15s ease;
+}
+/* The count badge expands/contracts so the Filters button's length slides out
+   when a filter becomes active and retracts when filters clear. */
+#filters-badge {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  max-width: 3ch;
+  transition: max-width 0.2s ease, opacity 0.2s ease,
+              margin-left 0.2s ease, padding-left 0.2s ease, padding-right 0.2s ease;
+}
+#filters-badge.is-collapsed {
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0 !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+/* Active state for the Filters button while its panel is open. */
+#filters-toggle.active {
+  background: var(--bs-secondary-bg);
+  border-color: var(--bs-primary);
+  color: var(--bs-body-color);
+}
 .filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  margin: 2px 8px 2px 0;
   padding: 2px 4px 2px 10px;
   background: var(--bs-secondary-bg);
   border: 1px solid var(--bs-border-color);
   border-radius: 14px;
   font-size: 0.78rem;
   color: var(--bs-body-color);
+  white-space: nowrap;
+  /* width is animated (via inline px) when a chip enters or leaves */
+  transition: width 0.15s ease, opacity 0.15s ease, margin 0.15s ease, padding 0.15s ease;
 }
 .filter-chip-close {
   width: 18px;
@@ -1911,6 +1972,7 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
   border-radius: 6px;
   padding: 12px;
   margin-bottom: 10px;
+  overflow: hidden;
 }
 .filter-row {
   display: flex;
@@ -1969,8 +2031,25 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
   text-align: center;
   font-size: 0.9rem;
 }
+/* View-mode buttons and Clear-selection: text labels on tablet/desktop,
+   icons on mobile to keep the toolbar on a single row. */
+#toolbar .btn-group .mode-icon,
+#clear-movie-selection .clear-icon { display: none; vertical-align: -2px; }
+#toolbar .btn-group .mode-label,
+#clear-movie-selection .clear-label { display: inline; }
+
 @media (max-width: 600px) {
-  #toolbar { row-gap: 6px; }
+  #toolbar { flex-wrap: nowrap !important; gap: 0.3rem; }
   #filter-chips { flex-basis: 100%; order: 10; }
   .filter-label { min-width: 86px; font-size: 0.68rem; }
+  /* Keep the toolbar on one line: collapse view modes and Clear-selection to
+     icons, and tighten Filters/Sort. */
+  #toolbar #filters-toggle,
+  #toolbar #sort-toggle { padding-left: 0.45rem; padding-right: 0.45rem; }
+  #toolbar .btn-group .mode-icon,
+  #clear-movie-selection .clear-icon { display: inline; }
+  #toolbar .btn-group .mode-label,
+  #clear-movie-selection .clear-label { display: none; }
+  #toolbar .btn-group .btn { padding-left: 0.5rem; padding-right: 0.5rem; }
+  #clear-movie-selection { padding-left: 0.5rem; padding-right: 0.5rem; }
 }

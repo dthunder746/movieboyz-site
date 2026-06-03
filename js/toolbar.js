@@ -14,7 +14,66 @@ export function createToolbar(opts) {
   var panelOpen = false;
   var panelBound = false;
 
+  var chipsShown = false;
+
   function cap(s) { return (s || '').charAt(0).toUpperCase() + (s || '').slice(1); }
+
+  // ── Fold animation (shared by the panel and the chips row) ──────────────
+  // Neither can transition display:none, so they fold their height (plus
+  // padding/margin/opacity) between 0 and the natural size. The element's
+  // content must already be set before foldOpen measures the target.
+  function clearFold(el) {
+    el.style.height = '';
+    el.style.paddingTop = '';
+    el.style.paddingBottom = '';
+    el.style.marginBottom = '';
+    el.style.opacity = '';
+  }
+  function foldOpen(el) {
+    el.classList.remove('fold-closing', 'fold-opening');
+    clearFold(el);
+    el.classList.remove('d-none');
+    var target = el.getBoundingClientRect().height; // natural open size
+    el.style.height = '0px';
+    el.style.paddingTop = '0px';
+    el.style.paddingBottom = '0px';
+    el.style.marginBottom = '0px';
+    el.style.opacity = '0';
+    void el.offsetWidth; // lock the collapsed start before transitioning
+    el.classList.add('fold-opening');
+    el.style.height = target + 'px';
+    el.style.paddingTop = '';
+    el.style.paddingBottom = '';
+    el.style.marginBottom = '';
+    el.style.opacity = '';
+  }
+  function foldClose(el) {
+    el.classList.remove('fold-opening');
+    var h = el.getBoundingClientRect().height;
+    el.style.height = h + 'px';
+    void el.offsetWidth; // lock the starting height before transitioning
+    el.classList.add('fold-closing');
+    el.style.height = '0px';
+    el.style.paddingTop = '0px';
+    el.style.paddingBottom = '0px';
+    el.style.marginBottom = '0px';
+    el.style.opacity = '0';
+  }
+  function wireFold(el) {
+    el.addEventListener('transitionend', function(e) {
+      if (e.propertyName !== 'height') return;
+      if (el.classList.contains('fold-closing')) {
+        el.classList.add('d-none');
+        el.classList.remove('fold-closing');
+        clearFold(el);
+      } else if (el.classList.contains('fold-opening')) {
+        el.classList.remove('fold-opening');
+        clearFold(el);
+      }
+    });
+  }
+  wireFold(panel);
+  wireFold(chipsEl);
 
   function escapeAttr(s) {
     return String(s)
@@ -214,19 +273,110 @@ export function createToolbar(opts) {
     return chips;
   }
 
+  function chipInner(c) {
+    return escapeAttr(c.label)
+      + ' <button class="filter-chip-close" type="button" aria-label="Clear ' + c.key + '">×</button>';
+  }
+  function createChip(c) {
+    var el = document.createElement('span');
+    el.className = 'filter-chip';
+    el.setAttribute('data-dim', c.key);
+    el.setAttribute('data-label', c.label);
+    el.innerHTML = chipInner(c);
+    return el;
+  }
+  // A chip widens in when added and collapses out when removed; the filter
+  // itself has already been applied, so this is purely visual.
+  function animateChipIn(el) {
+    var target = el.getBoundingClientRect().width;
+    el.style.overflow = 'hidden';
+    el.style.width = '0px';
+    el.style.opacity = '0';
+    el.style.marginRight = '0px';
+    el.style.paddingLeft = '0px';
+    el.style.paddingRight = '0px';
+    void el.offsetWidth;
+    el.style.width = target + 'px';
+    el.style.opacity = '';
+    el.style.marginRight = '';
+    el.style.paddingLeft = '';
+    el.style.paddingRight = '';
+    el.addEventListener('transitionend', function done(e) {
+      if (e.propertyName !== 'width') return;
+      el.removeEventListener('transitionend', done);
+      el.style.width = '';
+      el.style.overflow = '';
+    });
+  }
+  function animateChipOut(el) {
+    el.classList.add('chip-leaving');
+    var w = el.getBoundingClientRect().width;
+    el.style.overflow = 'hidden';
+    el.style.width = w + 'px';
+    void el.offsetWidth;
+    el.style.width = '0px';
+    el.style.opacity = '0';
+    el.style.marginRight = '0px';
+    el.style.paddingLeft = '0px';
+    el.style.paddingRight = '0px';
+    el.addEventListener('transitionend', function done(e) {
+      if (e.propertyName !== 'width') return;
+      el.removeEventListener('transitionend', done);
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+  }
+
+  // Reconcile chips by data-dim (instead of re-rendering wholesale) so removed
+  // chips can animate out and unchanged ones stay put.
+  function reconcileChips(desired) {
+    var present = {};
+    Array.prototype.forEach.call(chipsEl.querySelectorAll('.filter-chip'), function(el) {
+      if (!el.classList.contains('chip-leaving')) present[el.getAttribute('data-dim')] = el;
+    });
+    var wanted = {};
+    var prev = null;
+    desired.forEach(function(c) {
+      wanted[c.key] = true;
+      var el = present[c.key];
+      if (el) {
+        if (el.getAttribute('data-label') !== c.label) {
+          el.setAttribute('data-label', c.label);
+          el.innerHTML = chipInner(c);
+        }
+      } else {
+        el = createChip(c);
+        chipsEl.insertBefore(el, prev ? prev.nextSibling : chipsEl.firstChild);
+        animateChipIn(el);
+      }
+      prev = el;
+    });
+    Array.prototype.forEach.call(chipsEl.querySelectorAll('.filter-chip'), function(el) {
+      if (!wanted[el.getAttribute('data-dim')] && !el.classList.contains('chip-leaving')) {
+        animateChipOut(el);
+      }
+    });
+  }
+
   function renderChips() {
     var snap = filters.snapshot();
     var chips = chipsForSnapshot(snap);
-    chipsEl.innerHTML = chips.map(function(c) {
-      return '<span class="filter-chip" data-dim="' + c.key + '">' + c.label
-           + ' <button class="filter-chip-close" type="button" aria-label="Clear ' + c.key + '">×</button></span>';
-    }).join('');
-    if (snap.activeCount > 0) {
-      badge.textContent = String(snap.activeCount);
-      badge.classList.remove('d-none');
-    } else {
-      badge.classList.add('d-none');
+    var nowShown = chips.length > 0;
+    if (nowShown && !chipsShown) {
+      // Row first appears: render all chips and fold the row down.
+      chipsEl.innerHTML = chips.map(function(c) {
+        return '<span class="filter-chip" data-dim="' + c.key + '" data-label="' + escapeAttr(c.label) + '">' + chipInner(c) + '</span>';
+      }).join('');
+      foldOpen(chipsEl);
+    } else if (!nowShown && chipsShown) {
+      // Last chip(s) cleared: fold the whole row up, then hide.
+      foldClose(chipsEl);
+    } else if (nowShown && chipsShown) {
+      // Row stays: add/remove individual chips with their own animation.
+      reconcileChips(chips);
     }
+    chipsShown = nowShown;
+    if (snap.activeCount > 0) badge.textContent = String(snap.activeCount);
+    badge.classList.toggle('is-collapsed', snap.activeCount === 0);
   }
 
   chipsEl.addEventListener('click', function(e) {
@@ -237,11 +387,21 @@ export function createToolbar(opts) {
     filters.clearDimension(chip.dataset.dim);
   });
 
+  function openPanel() {
+    renderPanel();      // content must exist before foldOpen measures the target
+    foldOpen(panel);
+  }
+
+  function closePanel() {
+    foldClose(panel);
+  }
+
   toggleBtn.addEventListener('click', function() {
     panelOpen = !panelOpen;
-    panel.classList.toggle('d-none', !panelOpen);
+    toggleBtn.classList.toggle('active', panelOpen);
     toggleBtn.setAttribute('aria-expanded', panelOpen ? 'true' : 'false');
-    if (panelOpen) renderPanel();
+    if (panelOpen) openPanel();
+    else closePanel();
   });
 
   return {

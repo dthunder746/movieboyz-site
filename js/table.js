@@ -424,7 +424,14 @@ export function buildDetailedTable(data, colorMap) {
 
   tableRef.current = table;
 
-  return { table: table, initialSort: initialSort };
+  var sortMap = {
+    default:        initialSort,
+    to_date_profit: [{ column: 'to_date_profit', dir: 'desc' }],
+    roi:            [{ column: 'roi', dir: 'desc' }],
+    this_week:      allWeeks.length ? [{ column: 'week_' + allWeeks[allWeeks.length - 1], dir: 'desc' }] : initialSort,
+  };
+
+  return { table: table, initialSort: initialSort, sortMap: sortMap };
 }
 
 export function buildCompactTable(data, colorMap) {
@@ -587,8 +594,16 @@ export function buildCompactTable(data, colorMap) {
     paginationSizeSelector: [10, 25, 50, 100, true],
   });
 
+  var sortMap = {
+    default:        initialSort,
+    to_date_profit: [{ column: 'to_date_profit', dir: 'desc' }],
+    roi:            [{ column: 'roi', dir: 'desc' }],
+    this_week:      allWeeks.length ? [{ column: 'week_' + allWeeks[allWeeks.length - 1], dir: 'desc' }] : initialSort,
+  };
+
   return {
     table: table,
     initialSort: initialSort,
+    sortMap: sortMap,
   };
 }

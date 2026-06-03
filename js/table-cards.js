@@ -1,17 +1,5 @@
 import { fmt, formatShortDate, colorClass, ratingColorClass, pickOrSeasonIcon, ownerBadge } from './utils.js';
 
-var COOKIE_SORT = 'mb_cards_sort';
-
-function readCookie(name) {
-  var m = document.cookie.match(new RegExp('(?:^|;)\\s*' + name + '=([^;]*)'));
-  return m ? decodeURIComponent(m[1]) : null;
-}
-function writeCookie(name, value) {
-  var exp = new Date();
-  exp.setFullYear(exp.getFullYear() + 1);
-  document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + exp.toUTCString() + '; path=/; SameSite=Lax';
-}
-
 function deltaText(value, prev) {
   if (value === null || value === undefined) return null;
   if (prev === null || prev === undefined || prev === 0) return '(—)';
@@ -100,31 +88,60 @@ function buildRows(data) {
       last_week: lastWk,
       week_before: weekBefore,
       weeks: weeks,
+      wg: wg,
       rating_lb: (m.ratings && m.ratings.letterboxd && m.ratings.letterboxd.score != null) ? m.ratings.letterboxd.score : null,
     };
   });
 }
 
-function compareBy(field) {
+function compareBy(field, dir, allWeeks) {
+  // Mirror the tables' default sort. Tabulator applies a multi-column sort
+  // array with the LAST entry as the primary key, so the table's
+  // [release_date asc, week_W01 desc, ... week_Wlatest desc] sorts by the
+  // latest week's gross descending first, then each earlier week descending,
+  // with release date ascending as the weakest tiebreak. Missing weeks sort to
+  // the bottom (Tabulator treats empty values as last).
+  if (field === 'default') {
+    return function(a, b) {
+      for (var i = allWeeks.length - 1; i >= 0; i--) {
+        var wk = allWeeks[i];
+        var av = (a.wg && a.wg[wk] != null) ? a.wg[wk] : null;
+        var bv = (b.wg && b.wg[wk] != null) ? b.wg[wk] : null;
+        if (av === null && bv === null) continue;
+        if (av === null) return 1;
+        if (bv === null) return -1;
+        if (av !== bv) return bv - av;
+      }
+      if (a.release_date !== b.release_date) return a.release_date < b.release_date ? -1 : 1;
+      return 0;
+    };
+  }
+  var mult = (dir === 'asc') ? 1 : -1;
   return function(a, b) {
-    if (field === 'release_date') return (a.release_date < b.release_date) ? -1 : (a.release_date > b.release_date ? 1 : 0);
+    if (field === 'release_date') {
+      var c = (a.release_date < b.release_date) ? -1 : (a.release_date > b.release_date ? 1 : 0);
+      return c * mult;
+    }
     var av = a[field], bv = b[field];
-    if (av === null || av === undefined) return 1;
+    if (av === null || av === undefined) return 1; // missing values sort last
     if (bv === null || bv === undefined) return -1;
-    return bv - av; // desc for numeric fields
+    return (av - bv) * mult;
   };
 }
 
-export function buildCards(data, colorMap, selection, visibleIds) {
+export function buildCards(data, colorMap, selection, visibleIds, sortField, sortDir) {
   var container = document.getElementById('movie-cards');
   if (!container) return null;
 
-  var sortField = readCookie(COOKIE_SORT) || 'release_date';
-  var sortEl = document.getElementById('cards-sort');
-  if (sortEl) {
-    sortEl.value = sortField;
-    sortEl.classList.remove('d-none');
-  }
+  sortField = sortField || 'default';
+  sortDir = sortDir || 'asc';
+
+  var weekKeySet = {};
+  Object.keys(data.movies).forEach(function(id) {
+    var wg = data.movies[id].weekly_gross || {};
+    Object.keys(wg).forEach(function(w) { weekKeySet[w] = 1; });
+  });
+  var allWeeks = Object.keys(weekKeySet).sort();
 
   var allRows = buildRows(data);
 
@@ -143,7 +160,7 @@ export function buildCards(data, colorMap, selection, visibleIds) {
   var rows = filterRows();
 
   function render() {
-    rows.sort(compareBy(sortField));
+    rows.sort(compareBy(sortField, sortDir, allWeeks));
     var html = rows.map(function(r) {
       var unowned = !r.owner || r.owner === 'none';
       var ownerColor = unowned ? '#6c757d' : (colorMap[r.owner] || '#888');
@@ -212,55 +229,61 @@ export function buildCards(data, colorMap, selection, visibleIds) {
 
   render();
 
-  if (sortEl) {
-    sortEl.addEventListener('change', function() {
-      sortField = sortEl.value;
-      writeCookie(COOKIE_SORT, sortField);
-      render();
-    });
+  var LONG_PRESS_MS = 500;
+  var MOVE_TOL = 10; // px of slop still counted as a tap (not a drag/scroll)
+  var press = null;  // active gesture: { card, id, x, y, moved, longFired, timer }
+
+  function cancelTimer() {
+    if (press && press.timer) { clearTimeout(press.timer); press.timer = null; }
   }
 
-  var LONG_PRESS_MS = 500;
-  var pressTimer = null;
-  var pressFiredLong = false;
-  var pressedCard = null;
-
-  container.addEventListener('click', function(e) {
-    if (e.target.closest('.movie-card-plot-btn')) {
-      var pbCard = e.target.closest('.movie-card');
-      if (pbCard) selection.toggle(pbCard.dataset.imdbId);
-      e.stopPropagation();
-      return;
-    }
-    if (pressFiredLong) return; // long-press already handled
-    var card = e.target.closest('.movie-card');
-    if (!card) return;
-    var extra = card.querySelector('.movie-card-extra');
-    if (extra) extra.classList.toggle('d-none');
-  });
-
+  // Tap-to-expand is handled on pointerup (not click): a small pointer move
+  // between down and up suppresses the synthesised click, which otherwise drops
+  // the tap entirely. Long-press (≥ LONG_PRESS_MS, stationary) plots on the chart.
   container.addEventListener('pointerdown', function(e) {
-    if (e.target.closest('.movie-card-plot-btn')) return;
+    if (!e.isPrimary || e.target.closest('.movie-card-plot-btn')) { press = null; return; }
     var card = e.target.closest('.movie-card');
-    if (!card) return;
-    pressFiredLong = false;
-    pressedCard = card;
-    pressTimer = setTimeout(function() {
-      pressFiredLong = true;
-      selection.toggle(card.dataset.imdbId);
+    if (!card) { press = null; return; }
+    press = { card: card, id: card.dataset.imdbId, x: e.clientX, y: e.clientY, moved: false, longFired: false, timer: null };
+    press.timer = setTimeout(function() {
+      if (!press) return;
+      press.longFired = true;
+      press.timer = null;
+      selection.toggle(press.id);
     }, LONG_PRESS_MS);
   });
 
-  function clearPress() {
-    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-    pressedCard = null;
-    // Defer flag reset so the subsequent click handler can see it.
-    setTimeout(function() { pressFiredLong = false; }, 0);
-  }
+  container.addEventListener('pointermove', function(e) {
+    if (!press || press.moved) return;
+    if (Math.abs(e.clientX - press.x) > MOVE_TOL || Math.abs(e.clientY - press.y) > MOVE_TOL) {
+      press.moved = true; // drag/scroll — abandon the gesture
+      cancelTimer();
+    }
+  });
 
-  container.addEventListener('pointerup', clearPress);
-  container.addEventListener('pointercancel', clearPress);
-  container.addEventListener('pointerleave', clearPress);
+  container.addEventListener('pointerup', function(e) {
+    if (!press) return;
+    cancelTimer();
+    var wasLong = press.longFired, moved = press.moved, startCard = press.card;
+    press = null;
+    if (wasLong || moved) return;
+    var upCard = e.target.closest('.movie-card');
+    if (!upCard || upCard !== startCard) return;
+    var extra = startCard.querySelector('.movie-card-extra');
+    if (extra) extra.classList.toggle('d-none');
+  });
+
+  function abortPress() { cancelTimer(); press = null; }
+  container.addEventListener('pointercancel', abortPress);
+  container.addEventListener('pointerleave', abortPress);
+
+  // The plot button is a real <button>, so click fires reliably for it.
+  container.addEventListener('click', function(e) {
+    var plotBtn = e.target.closest('.movie-card-plot-btn');
+    if (!plotBtn) return;
+    var card = e.target.closest('.movie-card');
+    if (card) selection.toggle(card.dataset.imdbId);
+  });
 
   // Desktop right-click also plots (same as long-press)
   container.addEventListener('contextmenu', function(e) {
@@ -272,6 +295,11 @@ export function buildCards(data, colorMap, selection, visibleIds) {
 
   return {
     rerender: render,
+    setSort: function(field, dir) {
+      sortField = field || 'default';
+      sortDir = dir || 'asc';
+      render();
+    },
     setVisibleIds: function(ids) {
       _visibleIds = ids || null;
       rows = filterRows();
@@ -286,7 +314,6 @@ export function buildCards(data, colorMap, selection, visibleIds) {
     },
     destroy: function() {
       container.innerHTML = '';
-      if (sortEl) sortEl.classList.add('d-none');
     },
   };
 }

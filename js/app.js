@@ -189,6 +189,14 @@ function init(data) {
     colorMap: colorMap,
   });
 
+  // The chart and leaderboard only depend on the active owner set (and the
+  // plotted-movie selection, handled separately). Search, pick type, date,
+  // profitability, etc. are table-row filters that don't touch them — so we
+  // only rebuild the chart/leaderboard when the owner set actually changes,
+  // keeping search-as-you-type from tearing down and rebuilding the chart.
+  var _prevOwnersSig = '';
+  function ownersSig(arr) { return (arr || []).slice().sort().join('|'); }
+
   function rerenderForFilters(snap) {
     toolbar.refresh();
     var visibleIds = filters.filter(data.movies, data.latest_date);
@@ -198,10 +206,14 @@ function init(data) {
       applyTableFilter(visibleIds);
     }
     var activeOwners = snap.owners || [];
-    buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
-    if (_chart) _chart.destroy();
-    _chart = buildChart(data, owners, colorMap, activeOwners, selection.toArray());
-    updateChartHeading(activeOwners, selection.toArray());
+    var sig = ownersSig(activeOwners);
+    if (sig !== _prevOwnersSig) {
+      _prevOwnersSig = sig;
+      buildLeaderboard(data, owners, colorMap, LATEST_PROFIT_DATE, activeOwners);
+      if (_chart) _chart.destroy();
+      _chart = buildChart(data, owners, colorMap, activeOwners, selection.toArray());
+      updateChartHeading(activeOwners, selection.toArray());
+    }
   }
 
   // Initial render (unowned hidden by default)
@@ -219,18 +231,23 @@ function init(data) {
     _chart = buildChart(data, owners, colorMap, activeOwners, activeMovieIds);
     updateChartHeading(activeOwners, activeMovieIds);
     if (clearMovieBtn) {
-      if (activeMovieIds.length > 0) clearMovieBtn.classList.remove('d-none');
-      else                           clearMovieBtn.classList.add('d-none');
+      clearMovieBtn.disabled = activeMovieIds.length === 0;
     }
     if (_cards) _cards.syncSelection();
   });
 
+  var _helperTip = null;
   function updateHelperText(mode) {
-    var el = document.getElementById('table-helper');
+    var el = document.getElementById('table-helper-info');
     if (!el) return;
-    el.textContent = (mode === 'cards')
-      ? 'Tap to expand, long-press to plot on chart'
-      : 'Click rows to plot on chart';
+    var text = (mode === 'cards')
+      ? 'Tap a card to expand. Long-press (or right-click) to plot it on the chart.'
+      : 'Click rows to plot them on the chart.';
+    if (!_helperTip && window.bootstrap && window.bootstrap.Tooltip) {
+      _helperTip = new window.bootstrap.Tooltip(el, { title: text, trigger: 'hover focus', placement: 'bottom' });
+    } else if (_helperTip) {
+      _helperTip.setContent({ '.tooltip-inner': text });
+    }
   }
 
   function wireTableSelection() {
@@ -257,6 +274,7 @@ function init(data) {
   }
 
   function renderTable(mode) {
+    if (!CARD_SORT[_sortId]) _sortId = 'default';
     var surfaceEl = document.getElementById('table-surface');
     var overlay = document.getElementById('render-overlay');
     var scrollY = window.scrollY;
@@ -306,8 +324,10 @@ function init(data) {
     var visibleIds = filters.filter(data.movies, data.latest_date);
 
     if (mode === 'cards') {
-      _cards = buildCards(data, colorMap, selection, visibleIds);
+      var cs = CARD_SORT[_sortId] || CARD_SORT.default;
+      _cards = buildCards(data, colorMap, selection, visibleIds, cs.field, cs.dir);
       _renderedMode = mode;
+      markActiveSort(_sortId);
       updateHelperText(mode);
       requestAnimationFrame(finishSwap);
       return;
@@ -321,20 +341,110 @@ function init(data) {
     }
     _table = built.table;
     _initialSort = built.initialSort;
+    var twk = built.sortMap && built.sortMap.this_week;
+    _latestWeekCol = (twk && twk[0] && /^week_/.test(twk[0].column)) ? twk[0].column : null;
     _renderedMode = mode;
+    _suppressSortSync = true;
     wireTableSelection();
     applyTableFilter(visibleIds);
+    markActiveSort(_sortId);
     updateHelperText(mode);
 
-    _table.on('tableBuilt', function() { requestAnimationFrame(finishSwap); });
+    _table.on('dataSorted', function(sorters) {
+      if (_suppressSortSync) return;
+      var id = idFromSorters(sorters);
+      _sortId = id;
+      if (id !== 'custom') localStorage.setItem(SORT_KEY, id);
+      markActiveSort(id);
+    });
+
+    // setSort is only available once the table is built; applying the saved sort
+    // synchronously after construction throws. Do it on tableBuilt.
+    _table.on('tableBuilt', function() {
+      if (_sortId !== 'default') _table.setSort(tableSortSpec(_sortId));
+      _suppressSortSync = false;
+      requestAnimationFrame(finishSwap);
+    });
     // Fallback in case tableBuilt already fired; finishSwap is idempotent.
-    setTimeout(finishSwap, 250);
+    setTimeout(function() { _suppressSortSync = false; finishSwap(); }, 250);
   }
 
   var _cards = null;
   var _initialSort = null;
+  var _latestWeekCol = null;
+  var _suppressSortSync = false;
+  var SORT_KEY = 'mbTableSort';
+  var _sortId = localStorage.getItem(SORT_KEY) || 'default';
+  var sortMenu = document.getElementById('sort-menu');
   var _savedMode = initialMode();
   var _renderedMode = _savedMode;
+
+  // Maps a sort id to the card comparator (field + direction). 'default' sorts
+  // cards by release date ascending — the primary key of the tables' week-gross
+  // default sort (the per-week tiebreakers don't translate to a card list).
+  var CARD_SORT = {
+    default:      { field: 'default',        dir: 'asc'  },
+    release_asc:  { field: 'release_date',   dir: 'asc'  },
+    release_desc: { field: 'release_date',   dir: 'desc' },
+    profit_desc:  { field: 'to_date_profit', dir: 'desc' },
+    profit_asc:   { field: 'to_date_profit', dir: 'asc'  },
+    roi_desc:     { field: 'roi',            dir: 'desc' },
+    roi_asc:      { field: 'roi',            dir: 'asc'  },
+    week_desc:    { field: 'this_week',      dir: 'desc' },
+    week_asc:     { field: 'this_week',      dir: 'asc'  },
+  };
+
+  // Tabulator sort spec for a sort id; 'default' is the table's week-gross sort.
+  function tableSortSpec(id) {
+    if (id === 'default' || !CARD_SORT[id]) return _initialSort;
+    var col;
+    if (id.indexOf('release_') === 0)     col = 'release_date';
+    else if (id.indexOf('profit_') === 0) col = 'to_date_profit';
+    else if (id.indexOf('roi_') === 0)    col = 'roi';
+    else if (id.indexOf('week_') === 0)   col = _latestWeekCol || 'release_date';
+    var dir = (id.slice(-3) === 'asc') ? 'asc' : 'desc';
+    return [{ column: col, dir: dir }];
+  }
+
+  function idFromSorters(sorters) {
+    if (!sorters || !sorters.length) return 'default';
+    var s = sorters[0];
+    var f = s.field || (s.column && s.column.getField ? s.column.getField() : null);
+    var dir = s.dir;
+    if (sorters.length > 1 && f === 'release_date') return 'default';
+    if (f === 'release_date')   return dir === 'asc' ? 'release_asc' : 'release_desc';
+    if (f === 'to_date_profit') return dir === 'asc' ? 'profit_asc' : 'profit_desc';
+    if (f === 'roi')            return dir === 'asc' ? 'roi_asc' : 'roi_desc';
+    if (_latestWeekCol && f === _latestWeekCol) return dir === 'asc' ? 'week_asc' : 'week_desc';
+    return 'custom';
+  }
+
+  function markActiveSort(id) {
+    if (!sortMenu) return;
+    Array.prototype.forEach.call(sortMenu.querySelectorAll('[data-sort]'), function(b) {
+      b.classList.toggle('active', b.dataset.sort === id);
+    });
+  }
+
+  function applySort(id) {
+    _sortId = id;
+    if (id !== 'custom') localStorage.setItem(SORT_KEY, id);
+    markActiveSort(id);
+    if (_renderedMode === 'cards') {
+      if (_cards) { var cs = CARD_SORT[id] || CARD_SORT.default; _cards.setSort(cs.field, cs.dir); }
+    } else if (_table && id !== 'custom') {
+      _suppressSortSync = true;
+      _table.setSort(tableSortSpec(id));
+      _suppressSortSync = false;
+    }
+  }
+
+  if (sortMenu) {
+    sortMenu.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-sort]');
+      if (btn) applySort(btn.dataset.sort);
+    });
+  }
 
   renderTable(_savedMode);
   toolbar.refresh();
