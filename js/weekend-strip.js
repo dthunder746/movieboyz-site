@@ -182,7 +182,7 @@ export function buildWeekendStrip(data, owners, colorMap) {
       : '<div class="scorecard-stat-value text-neu">—</div>';
     var ratingCellHtml = '<div class="scorecard-stat">'
       + ratingValueHtml
-      + '<div class="scorecard-stat-label">Average Rating</div>'
+      + '<div class="scorecard-stat-label">Avg. Rating</div>'
       + '</div>';
 
     var statGridHtml = '<div class="scorecard-stats">'

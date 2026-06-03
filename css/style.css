@@ -460,6 +460,7 @@ body { font-size: 0.9rem; }
   align-items: center;
   justify-content: center;
   gap: 2px;
+  white-space: nowrap;
 }
 
 .scorecard-movies {
