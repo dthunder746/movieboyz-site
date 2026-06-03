@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-03 05:46:30",
+  "fetched_at": "2026-06-03 10:47:02",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-06-02T21-46-20Z",
+  "last_processed_snapshot": "2026-06-03T02-46-52Z",
   "latest_date": "2026-06-01",
   "latest_profit_date": "2026-06-01",
   "movies": {
@@ -24510,7 +24510,7 @@
         "2026-05-29": 0,
         "2026-05-30": 0,
         "2026-05-31": 0,
-        "2026-06-01": 0
+        "2026-06-01": 2828868
       },
       "daily_gross": {
         "2026-04-13": 15204888,
@@ -24562,12 +24562,12 @@
         "2026-05-29": 15591757,
         "2026-05-30": 15591757,
         "2026-05-31": 15591757,
-        "2026-06-01": 15591757
+        "2026-06-01": 18420625
       },
       "days_running": 17,
       "draft_pick": null,
       "estimated_budget": true,
-      "gross_td": 15591757,
+      "gross_td": 18420625,
       "movie_title": "MOBILE SUIT GUNDAM HATHAWAY The Sorcery of Nymph Circe",
       "owner": "none",
       "pick_type": null,
@@ -24621,9 +24621,9 @@
         "2026-05-29": 5591757,
         "2026-05-30": 5591757,
         "2026-05-31": 5591757,
-        "2026-06-01": 5591757
+        "2026-06-01": 8420625
       },
-      "profit_td": 5591757,
+      "profit_td": 8420625,
       "ratings": {
         "fetched_at": "2026-06-03",
         "imdb": {
@@ -24660,7 +24660,8 @@
       "season": "SUMMER",
       "weekly_gross": {
         "2026-W16": 15204888,
-        "2026-W20": 386869
+        "2026-W20": 386869,
+        "2026-W23": 2828868
       },
       "year": 2026
     },
