@@ -77,15 +77,16 @@ body { font-size: 0.9rem; }
 
 /* ── Tabulator tweaks ───────────────────────────────────────────────────── */
 .tabulator { font-size: 0.85rem; }
+
+/* On mobile a frozen column eats too much width, so un-freeze it and let the
+   whole table scroll horizontally instead. */
 @media (max-width: 767px) {
-  /* Header frozen cell — match Tabulator's 0-3-0 specificity */
   .tabulator .tabulator-header .tabulator-frozen {
     position: static !important;
     left: auto !important;
     z-index: auto !important;
     border-right: none !important;
   }
-  /* Row frozen cell */
   .tabulator-row .tabulator-cell.tabulator-frozen {
     position: static !important;
     left: auto !important;
@@ -1603,41 +1604,40 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
   color: var(--bs-secondary-color);
   margin-left: 2px;
 }
-.col-owner .owner-cell-initial,
-.col-owner .owner-cell-dotonly {
-  display: none;
-}
-[data-compact-tier="initial"] .col-owner .owner-cell-full { display: none; }
-[data-compact-tier="initial"] .col-owner .owner-cell-initial { display: inline; }
-[data-compact-tier="dotonly"] .col-owner .owner-cell-full,
-[data-compact-tier="dotonly"] .col-owner .owner-cell-initial { display: none; }
-[data-compact-tier="dotonly"] .col-owner .owner-cell-dotonly { display: inline; }
 
-.mb-toast {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%) translateY(20px);
-  opacity: 0;
-  transition: opacity 0.25s, transform 0.25s;
-  background: var(--bs-dark);
-  color: var(--bs-light);
-  border: 1px solid var(--bs-border-color);
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  max-width: 90vw;
-  z-index: 2000;
-  pointer-events: none;
+/* Compact: let header titles wrap to two lines (e.g. "Total Profit",
+   "Gross / Week #N") instead of truncating. */
+#movie-table.mode-compact .tabulator-col .tabulator-col-title {
+  white-space: normal;
+  text-overflow: clip;
+  line-height: 1.15;
 }
-.mb-toast--show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+
+/* Owner badge: a coloured pill with the owner's two-letter initials (grey +
+   dash if unowned), shown left of the movie title. */
+.owner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 26px;
+  height: 18px;
+  padding: 0;
+  border-radius: 9px;
+  margin-right: 6px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #fff;
+  vertical-align: middle;
+  flex: 0 0 auto;
 }
 
 .movie-card {
   background: var(--bs-tertiary-bg);
   border: 1px solid var(--bs-border-color);
+  border-left: 3px solid var(--owner, var(--bs-border-color));
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 10px;
@@ -1650,9 +1650,8 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
 .movie-card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 .movie-card-title {
   display: flex;
@@ -1667,36 +1666,116 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
   white-space: nowrap;
   font-weight: 500;
 }
-.movie-card-owner {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-.movie-card-sub {
+.movie-card-meta {
   color: var(--bs-secondary-color);
   font-size: 0.78rem;
   margin-bottom: 8px;
 }
-.movie-card-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+
+/* Hero: Total Profit as the headline, ROI as a coloured chip beside it. */
+.movie-card-hero {
+  display: flex;
+  align-items: baseline;
   gap: 8px;
   font-variant-numeric: tabular-nums;
 }
-.movie-card-stats .stat-label {
-  color: var(--bs-secondary-color);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
+.movie-card-hero .hero-profit {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.1;
 }
-.movie-card-stats .stat-val { font-size: 0.92rem; }
-.movie-card-stats .stat-delta {
-  color: var(--bs-secondary-color);
+.roi-chip {
   font-size: 0.78rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(127, 127, 127, 0.14);
 }
+.rating-chip {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(127, 127, 127, 0.14);
+  white-space: nowrap;
+}
+.rating-chip .rating-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+
+/* Diverging ROI meter: centre tick = break-even, loss (red) left / profit
+   (green) right. The tick is a sibling of the bar so the bar's overflow:hidden
+   (which rounds the fill) doesn't clip the tick's overshoot above/below. */
+.movie-card-be { margin-top: 8px; }
+.roi-meter { position: relative; margin-top: 8px; }
+.roi-bar {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bs-border-color);
+  overflow: hidden;
+}
+.roi-bar-fill { position: absolute; top: 0; bottom: 0; }
+.roi-bar-fill.pos { left: 50%; background: var(--bs-success); }
+.roi-bar-fill.neg { right: 50%; background: var(--bs-danger); }
+/* +300% mark — overshoots the bar like the break-even tick, always visible. */
+.roi-cap {
+  position: absolute;
+  left: 85%;
+  top: -3px;
+  height: 12px;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--bs-body-color);
+  opacity: 0.55;
+}
+/* Break-even tick — overshoots above/below the bar. */
+.roi-tick {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  height: 12px;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--bs-body-color);
+  opacity: 0.75;
+}
+/* Breakout chevron fill for ROI > +100% — repeating green arrowheads past the
+   cap tick. Width is set inline (log-scaled), reaching the bar's end at the top
+   of the range. A mask paints the chevrons so they inherit the success colour. */
+.roi-over {
+  position: absolute;
+  left: 85%;
+  top: -1px;
+  height: 8px;
+  min-width: 8px;
+  margin-left: 2px;
+  background: var(--bs-success);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='8'%3E%3Cpolygon points='1,0 7,4 1,8' fill='%23000'/%3E%3C/svg%3E") left center / 9px 8px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='8'%3E%3Cpolygon points='1,0 7,4 1,8' fill='%23000'/%3E%3C/svg%3E") left center / 9px 8px repeat-x;
+}
+.roi-scale {
+  position: relative;
+  height: 0.85rem;
+  margin-top: 6px;
+  font-size: 0.65rem;
+  color: var(--bs-secondary-color);
+  font-variant-numeric: tabular-nums;
+}
+.roi-scale span { position: absolute; white-space: nowrap; }
+.roi-scale .s-min { left: 0; }
+.roi-scale .s-be { left: 50%; transform: translateX(-50%); font-weight: 600; }
+.roi-scale .s-max { left: 85%; transform: translateX(-50%); }
+
+/* Weekly-gross sparkline. */
+.movie-card-spark { margin-top: 8px; }
+.movie-card-spark .spark { display: block; width: 100%; height: 30px; }
 
 .movie-card-plot-btn {
   background: transparent;
@@ -1718,18 +1797,40 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
   margin-top: 8px;
   padding-top: 8px;
   font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
-.movie-card-extra .extra-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-.movie-card-extra .extra-label {
+.movie-card-extra .extra-rank {
   color: var(--bs-secondary-color);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+.movie-card-extra .extra-rank strong { color: var(--bs-body-color); }
+.movie-card-extra .extra-empty { color: var(--bs-secondary-color); }
+
+.week-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.week-table th {
+  text-align: right;
+  font-weight: 500;
+  color: var(--bs-secondary-color);
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  padding: 0 0 4px;
+  border-bottom: 1px solid var(--bs-border-color);
 }
+.week-table th:first-child { text-align: left; }
+.week-table td {
+  text-align: right;
+  padding: 3px 0;
+}
+.week-table td:first-child { text-align: left; color: var(--bs-secondary-color); }
+.week-table tbody tr + tr td { border-top: 1px solid rgba(127, 127, 127, 0.12); }
 
 /* Rounded card-style frame for the Compact and Detailed tables.
    Tabulator 6.x applies the .tabulator class to the #movie-table element

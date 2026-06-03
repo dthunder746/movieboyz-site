@@ -56,22 +56,3 @@ export function createModeSwitcher(opts) {
     },
   };
 }
-
-var COOKIE_TOAST = 'mb_toast_narrow_seen';
-
-export function showNarrowToast() {
-  if (readCookie(COOKIE_TOAST)) return;
-  var existing = document.getElementById('mb-toast');
-  if (existing) existing.remove();
-  var el = document.createElement('div');
-  el.id = 'mb-toast';
-  el.className = 'mb-toast';
-  el.textContent = 'Switched to Cards. Screen is too narrow for the table.';
-  document.body.appendChild(el);
-  setTimeout(function() { el.classList.add('mb-toast--show'); }, 10);
-  setTimeout(function() {
-    el.classList.remove('mb-toast--show');
-    setTimeout(function() { el.remove(); }, 300);
-  }, 4500);
-  writeCookie(COOKIE_TOAST, '1', 1); // 1 day
-}

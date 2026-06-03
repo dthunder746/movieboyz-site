@@ -1,7 +1,7 @@
 import {
   fmt, fmtPct, colorClass, ratingColorClass,
   formatShortDate, formatDayMonth, isoWeekBounds, getWeekdayAbbr, dateToIsoWeekKey,
-  weekTitle, pickIcon,
+  weekTitle, pickIcon, pickOrSeasonIcon, ownerBadge,
 } from './utils.js';
 
 // ── Expandable column group factory ──────────────────────────────────────
@@ -201,14 +201,14 @@ export function buildDetailedTable(data, colorMap) {
     title: 'Movie',
     field: 'movie_title',
     frozen: true,
-    minWidth: 190,
+    minWidth: 230,
     cssClass: 'col-movie-title',
     formatter: function(cell) {
       var row = cell.getRow().getData();
-      var dot = '<span class="owner-dot" style="background:' + (colorMap[row.owner] || '#888') + '"></span>';
-      var icon = pickIcon(row.pick_type, row.release_date);
+      var badge = ownerBadge(row.owner, colorMap);
+      var icon = pickOrSeasonIcon(row.pick_type, row.release_date);
       var title = '<span class="movie-title-text">' + cell.getValue() + '</span>';
-      return dot + icon + title;
+      return badge + icon + title;
     },
     formatterParams: { html: true },
     tooltip: function(e, cell) { return cell.getValue(); },
@@ -223,17 +223,6 @@ export function buildDetailedTable(data, colorMap) {
       var v = cell.getValue();
       if (v === 'TBA' || !v) return '<span class="text-neu">TBA</span>';
       return formatShortDate(v);
-    },
-    formatterParams: { html: true },
-  };
-
-  var ownerCol = {
-    title: 'Owner',
-    field: 'owner',
-    minWidth: 100,
-    formatter: function(cell) {
-      var o = cell.getValue();
-      return '<span class="owner-dot" style="background:' + (colorMap[o] || '#888') + '"></span>' + o;
     },
     formatterParams: { html: true },
   };
@@ -405,7 +394,6 @@ export function buildDetailedTable(data, colorMap) {
   var columns = [
     titleCol,
     openingCol,
-    ownerCol,
     ratingsGroup,
     { title: 'Financials', columns: financialCols },
   ];
@@ -474,29 +462,20 @@ export function buildCompactTable(data, colorMap) {
     if (v === null || v === undefined) return '<span class="text-neu">—</span>';
     return fmt(v);
   }
-  function fmtProfitRoi(cell) {
-    var row = cell.getRow().getData();
-    var p = row.to_date_profit;
-    var r = row.roi;
+  function fmtProfit(cell) {
+    var p = cell.getValue();
     if (p === null || p === undefined) return '<span class="text-neu">—</span>';
-    var pSpan = '<span class="' + colorClass(p) + '">' + fmt(p) + '</span>';
-    var rTxt = (r === null || r === undefined) ? '—' : (r > 0 ? '+' : '') + Math.round(r) + '%';
-    return pSpan + ' <span class="compact-delta">(' + rTxt + ')</span>';
+    return '<span class="' + colorClass(p) + '">' + fmt(p) + '</span>';
   }
-  function makeWeekFormatter(prevField) {
-    return function(cell) {
-      var row = cell.getRow().getData();
-      var v = cell.getValue();
-      if (v === null || v === undefined) return '<span class="text-neu">—</span>';
-      var prev = prevField ? row[prevField] : null;
-      var vSpan = '<span class="' + colorClass(v) + '">' + fmt(v) + '</span>';
-      if (prev === null || prev === undefined || prev === 0) {
-        return vSpan + ' <span class="compact-delta">(—)</span>';
-      }
-      var pct = Math.round((v - prev) / Math.abs(prev) * 100);
-      var dTxt = (pct > 0 ? '+' : '') + pct + '%';
-      return vSpan + ' <span class="compact-delta">(' + dTxt + ')</span>';
-    };
+  function fmtRoi(cell) {
+    var r = cell.getValue();
+    if (r === null || r === undefined) return '<span class="text-neu">—</span>';
+    return '<span class="' + colorClass(r) + '">' + (r > 0 ? '+' : '') + Math.round(r) + '%</span>';
+  }
+  function fmtWeekGross(cell) {
+    var v = cell.getValue();
+    if (v === null || v === undefined) return '<span class="text-neu">—</span>';
+    return '<span class="' + colorClass(v) + '">' + fmt(v) + '</span>';
   }
 
   // Columns
@@ -504,14 +483,15 @@ export function buildCompactTable(data, colorMap) {
     title: 'Movie',
     field: 'movie_title',
     frozen: true,
-    width: 172,
-    minWidth: 140,
+    width: 224,
+    minWidth: 184,
     cssClass: 'col-movie-title',
     formatter: function(cell) {
       var row = cell.getRow().getData();
-      var icon = pickIcon(row.pick_type, row.release_date);
+      var badge = ownerBadge(row.owner, colorMap);
+      var icon = pickOrSeasonIcon(row.pick_type, row.release_date);
       var title = '<span class="movie-title-text">' + cell.getValue() + '</span>';
-      return icon + title;
+      return badge + icon + title;
     },
     formatterParams: { html: true },
     tooltip: function(e, cell) { return cell.getValue(); },
@@ -520,25 +500,13 @@ export function buildCompactTable(data, colorMap) {
   var releasedCol = {
     title: 'Released',
     field: 'release_date',
-    width: 80,
-    minWidth: 72,
+    width: 96,
+    minWidth: 88,
     sorter: 'string',
     formatter: function(cell) {
       var v = cell.getValue();
       if (v === 'TBA' || !v) return '<span class="text-neu">TBA</span>';
       return formatShortDate(v);
-    },
-    formatterParams: { html: true },
-  };
-
-  var ownerCol = {
-    title: 'Owner',
-    field: 'owner',
-    width: 88,
-    minWidth: 60,
-    formatter: function(cell) {
-      var o = cell.getValue();
-      return '<span class="owner-dot" style="background:' + (colorMap[o] || '#888') + '"></span>' + o;
     },
     formatterParams: { html: true },
   };
@@ -555,35 +523,48 @@ export function buildCompactTable(data, colorMap) {
   };
 
   var profitCol = {
-    title: 'Profit (ROI)',
+    title: 'Total Profit',
     field: 'to_date_profit',
     hozAlign: 'right',
-    width: 138,
-    minWidth: 120,
-    formatter: fmtProfitRoi,
+    width: 110,
+    minWidth: 96,
+    formatter: fmtProfit,
     formatterParams: { html: true },
     sorter: 'number',
   };
 
-  var weekCols = reversedWeeks.map(function(wk, i) {
-    var prev = reversedWeeks[i + 1];
-    var label;
-    if (i === 0) label = 'This wk';
-    else if (i === 1) label = 'Last wk';
-    else label = (i + 1) + ' wks ago';
+  var roiCol = {
+    title: 'ROI',
+    field: 'roi',
+    hozAlign: 'right',
+    width: 84,
+    minWidth: 72,
+    formatter: fmtRoi,
+    formatterParams: { html: true },
+    sorter: 'number',
+  };
+
+  var weekCols = reversedWeeks.map(function(wk) {
+    var weekNum = parseInt(wk.split('-W')[1], 10);
     return {
-      title:    label,
+      title:    'Gross Week #' + weekNum,
+      titleFormatter: function() {
+        var el = document.createElement('div');
+        el.className = 'compact-week-title';
+        el.innerHTML = 'Gross<br>Week&nbsp;#' + weekNum;
+        return el;
+      },
       field:    'week_' + wk,
       hozAlign: 'right',
-      width:    120,
-      minWidth: 102,
-      formatter: makeWeekFormatter(prev ? 'week_' + prev : null),
+      width:    96,
+      minWidth: 88,
+      formatter: fmtWeekGross,
       formatterParams: { html: true },
       sorter:   'number',
     };
   });
 
-  var columns = [titleCol, releasedCol, ownerCol, breakevenCol, profitCol].concat(weekCols);
+  var columns = [titleCol, releasedCol, breakevenCol, profitCol, roiCol].concat(weekCols);
 
   // Match the Detailed table's default ordering (release date asc, then weeks).
   var initialSort = allWeeks.length > 0
@@ -595,7 +576,7 @@ export function buildCompactTable(data, colorMap) {
   var table = new Tabulator('#movie-table', {
     data:                  rows,
     columns:               columns,
-    layout:                'fitColumns',
+    layout:                'fitDataFill',
     responsiveLayout:      false,
     initialSort:           initialSort,
     columnHeaderVertAlign: 'bottom',
@@ -609,7 +590,6 @@ export function buildCompactTable(data, colorMap) {
   return {
     table: table,
     initialSort: initialSort,
-    weekFields: reversedWeeks.map(function(wk) { return 'week_' + wk; }),
   };
 }
 

@@ -8,8 +8,7 @@ import { buildWeekendStrip } from './weekend-strip.js';
 import { buildInfoCards } from './info-cards.js';
 import { applyOverrides } from './overrides.js';
 import { createSelection } from './selection.js';
-import { initialMode, createModeSwitcher, showNarrowToast } from './table-mode.js';
-import { applyCompactResponsive } from './compact-responsive.js';
+import { initialMode, createModeSwitcher } from './table-mode.js';
 import { buildCards } from './table-cards.js';
 
 // ── Module-level chart / table instances ─────────────────────────────────
@@ -317,7 +316,6 @@ function init(data) {
   }
 
   function renderTable(mode) {
-    var wrapperEl = document.getElementById('table-wrapper');
     var surfaceEl = document.getElementById('table-surface');
     var overlay = document.getElementById('render-overlay');
     var scrollY = window.scrollY;
@@ -355,30 +353,20 @@ function init(data) {
       }
     }
 
-    if (_compactRO) { _compactRO.disconnect(); _compactRO = null; }
-    if (_overrideRO) { _overrideRO.disconnect(); _overrideRO = null; }
     if (_table) { _table.destroy(); _table = null; }
     if (_cards) { _cards.destroy(); _cards = null; }
     var tableEl = document.getElementById('movie-table');
     var cardsEl = document.getElementById('movie-cards');
     tableEl.classList.toggle('d-none', mode === 'cards');
     cardsEl.classList.toggle('d-none', mode !== 'cards');
+    tableEl.classList.toggle('mode-compact', mode === 'compact');
+    tableEl.classList.toggle('mode-detailed', mode === 'detailed');
 
     if (mode === 'cards') {
       _cards = buildCards(data, colorMap, selection);
       _renderedMode = mode;
       applyFiltersToCards();
       updateHelperText(mode);
-      // While auto-overriding Compact under 440px, watch for a widen back.
-      if (_overrideActive) {
-        _overrideRO = new ResizeObserver(function() {
-          if (wrapperEl.clientWidth >= 440) {
-            _overrideActive = false;
-            renderTable('compact');
-          }
-        });
-        _overrideRO.observe(wrapperEl);
-      }
       requestAnimationFrame(finishSwap);
       return;
     }
@@ -386,19 +374,6 @@ function init(data) {
     var built;
     if (mode === 'compact') {
       built = buildCompactTable(data, colorMap);
-      _compactRO = applyCompactResponsive(built.table, built.weekFields, {
-        onNarrow: function() {
-          if (_savedMode !== 'compact') return;
-          showNarrowToast();
-          _overrideActive = true;
-          renderTable('cards');
-        },
-        onWidened: function() {
-          if (_savedMode !== 'compact' || !_overrideActive) return;
-          _overrideActive = false;
-          renderTable('compact');
-        },
-      });
     } else {
       built = buildDetailedTable(data, colorMap);
     }
@@ -414,13 +389,10 @@ function init(data) {
     setTimeout(finishSwap, 250);
   }
 
-  var _compactRO = null;
-  var _overrideRO = null;
   var _cards = null;
   var _initialSort = null;
   var _savedMode = initialMode();
   var _renderedMode = _savedMode;
-  var _overrideActive = false;
 
   renderTable(_savedMode);
   buildOwnerFilter(owners, colorMap, [], _showUnowned);
@@ -430,7 +402,6 @@ function init(data) {
     initial: _savedMode,
     onChange: function(mode) {
       _savedMode = mode;
-      _overrideActive = false;
       renderTable(mode);
     },
   });
