@@ -164,3 +164,25 @@ export function pickIcon(pickType, releaseDate) {
   if (key === 'seasonal') key = seasonFromDate(releaseDate);
   return PICK_ICONS[key] ? '<span class="scorecard-pick-icon">' + PICK_ICONS[key] + '</span>' : '';
 }
+
+// Every movie gets a symbol: a picked movie uses its pick-type icon, an
+// unpicked one falls back to its release season (matches info-cards).
+export function pickOrSeasonIcon(pickType, releaseDate) {
+  var date = (releaseDate && releaseDate !== 'TBA') ? releaseDate : null;
+  var type = pickType || (date ? 'seasonal' : null);
+  return pickIcon(type, date);
+}
+
+// Owners share first initials, so badges use first + last name initials.
+export var OWNER_INITIALS = {
+  Chris: 'CM', Connie: 'CL', Emerson: 'EB', Marcus: 'MH', Matt: 'MW',
+};
+
+// Coloured circle with the owner's initials; unowned movies get a grey circle
+// with a dash.
+export function ownerBadge(owner, colorMap) {
+  var unowned = !owner || owner === 'none';
+  var color = unowned ? '#6c757d' : ((colorMap && colorMap[owner]) || '#888');
+  var glyph = unowned ? '–' : (OWNER_INITIALS[owner] || owner.charAt(0).toUpperCase());
+  return '<span class="owner-badge" style="background:' + color + '">' + glyph + '</span>';
+}

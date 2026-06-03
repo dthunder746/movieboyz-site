@@ -1,7 +1,7 @@
 import {
   fmt, fmtPct, colorClass, ratingColorClass,
   formatShortDate, formatDayMonth, isoWeekBounds, getWeekdayAbbr, dateToIsoWeekKey,
-  weekTitle,
+  weekTitle, pickIcon, pickOrSeasonIcon, ownerBadge,
 } from './utils.js';
 
 // ── Expandable column group factory ──────────────────────────────────────
@@ -27,11 +27,17 @@ function makeExpandableGroup(title, childColumns, hiddenFields, tableRef, initia
         if (!tableRef.current) return;
         expanded = !expanded;
         btn.textContent = expanded ? '\u2212' : '+';
+        // Batch the per-column show/hide into a single relayout. Without
+        // blockRedraw each showColumn/hideColumn triggers its own full redraw,
+        // so toggling a week's ~7 day columns reflowed the whole table 7 times.
+        var t = tableRef.current;
+        if (t.blockRedraw) t.blockRedraw();
         hiddenFields.forEach(function(f) {
-          if (expanded) tableRef.current.showColumn(f);
-          else tableRef.current.hideColumn(f);
+          if (expanded) t.showColumn(f);
+          else t.hideColumn(f);
         });
-        if (expanded) tableRef.current.redraw();
+        if (t.restoreRedraw) t.restoreRedraw();
+        else if (expanded) t.redraw();
       });
       container.appendChild(btn);
       return container;
@@ -44,7 +50,7 @@ function makeExpandableGroup(title, childColumns, hiddenFields, tableRef, initia
 // Reads pre-computed fields from each movie record (added by the fetcher).
 // Returns the Tabulator instance.
 
-export function buildTable(data, colorMap) {
+export function buildDetailedTable(data, colorMap) {
 
   // Collect daily-change dates and weekly keys from pre-computed movie fields
   var allDailyDates = new Set();
@@ -195,41 +201,28 @@ export function buildTable(data, colorMap) {
     title: 'Movie',
     field: 'movie_title',
     frozen: true,
-    minWidth: 190,
+    minWidth: 230,
+    cssClass: 'col-movie-title',
     formatter: function(cell) {
       var row = cell.getRow().getData();
-      var dot = '<span class="owner-dot" style="background:' + (colorMap[row.owner] || '#888') + '"></span>';
-      var badge = row.pick_type ? '<span class="pick-badge pick-' + row.pick_type + '">' + row.pick_type + '</span>' : '';
-      return dot + cell.getValue() + (badge ? ' ' + badge : '');
+      var badge = ownerBadge(row.owner, colorMap);
+      var icon = pickOrSeasonIcon(row.pick_type, row.release_date);
+      var title = '<span class="movie-title-text">' + cell.getValue() + '</span>';
+      return badge + icon + title;
     },
     formatterParams: { html: true },
+    tooltip: function(e, cell) { return cell.getValue(); },
   };
 
   var openingCol = {
-    title: 'Opening',
+    title: 'Released',
     field: 'release_date',
-    minWidth: 120,
+    minWidth: 80,
     sorter: 'string',
     formatter: function(cell) {
-      var row = cell.getRow().getData();
-      var rel = row.release_date;
-      if (rel === 'TBA') return '<span class="text-neu">TBA</span>';
-      var label = formatShortDate(rel);
-      if (row.days_running !== null && row.days_running !== undefined) {
-        label += ' · ' + row.days_running + 'd';
-      }
-      return label;
-    },
-    formatterParams: { html: true },
-  };
-
-  var ownerCol = {
-    title: 'Owner',
-    field: 'owner',
-    minWidth: 100,
-    formatter: function(cell) {
-      var o = cell.getValue();
-      return '<span class="owner-dot" style="background:' + (colorMap[o] || '#888') + '"></span>' + o;
+      var v = cell.getValue();
+      if (v === 'TBA' || !v) return '<span class="text-neu">TBA</span>';
+      return formatShortDate(v);
     },
     formatterParams: { html: true },
   };
@@ -299,7 +292,7 @@ export function buildTable(data, colorMap) {
   // ── Per-week expandable column groups ──────────────────────────────────
   var tableRef = { current: null };
   var hiddenRatingFields = RATING_SOURCES.filter(function(s) { return !s.visible; }).map(function(s) { return s.field; });
-  var ratingsGroup = makeExpandableGroup('Ratings', ratingCols, hiddenRatingFields, tableRef);
+  var ratingsGroup = makeExpandableGroup('Ratings', ratingCols, hiddenRatingFields, tableRef, false);
 
   var reversedWeeks = allWeeks.slice().reverse();
 
@@ -401,7 +394,6 @@ export function buildTable(data, colorMap) {
   var columns = [
     titleCol,
     openingCol,
-    ownerCol,
     ratingsGroup,
     { title: 'Financials', columns: financialCols },
   ];
@@ -432,40 +424,186 @@ export function buildTable(data, colorMap) {
 
   tableRef.current = table;
 
-  return { table: table, initialSort: initialSort };
+  var sortMap = {
+    default:        initialSort,
+    to_date_profit: [{ column: 'to_date_profit', dir: 'desc' }],
+    roi:            [{ column: 'roi', dir: 'desc' }],
+    this_week:      allWeeks.length ? [{ column: 'week_' + allWeeks[allWeeks.length - 1], dir: 'desc' }] : initialSort,
+  };
+
+  return { table: table, initialSort: initialSort, sortMap: sortMap };
 }
 
-// ── Owner filter ──────────────────────────────────────────────────────────
-// Pure render — no internal state. Reads activeOwners array, paints buttons.
-// Clicks are handled via event delegation in app.js.
+export function buildCompactTable(data, colorMap) {
+  // Collect weekly keys
+  var allWeekKeys = new Set();
+  Object.values(data.movies).forEach(function(m) {
+    Object.keys(m.weekly_gross || {}).forEach(function(w) { allWeekKeys.add(w); });
+  });
+  var allWeeks = Array.from(allWeekKeys).sort();
+  var reversedWeeks = allWeeks.slice().reverse(); // newest first
 
-export function buildOwnerFilter(owners, colorMap, activeOwners, showUnowned) {
-  var container = document.getElementById('owner-filter');
-  if (!container) return;
-  var activeSet = new Set(activeOwners);
-
-  container.innerHTML = '';
-
-  owners.forEach(function(owner) {
-    var active = activeSet.has(owner);
-    var btn = document.createElement('button');
-    btn.className = 'btn btn-sm ' + (active ? 'btn-primary' : 'btn-outline-secondary');
-    if (active) btn.style.backgroundColor = colorMap[owner];
-    btn.style.borderColor = colorMap[owner];
-    btn.dataset.owner = owner;
-    btn.innerHTML = '<span class="owner-dot" style="background:' + colorMap[owner] + '"></span>' + owner;
-    container.appendChild(btn);
+  // Row data
+  var rows = Object.entries(data.movies).map(function(entry) {
+    var imdb_id = entry[0], movie = entry[1];
+    var wg = movie.weekly_gross || {};
+    var row = {
+      imdb_id:        imdb_id,
+      movie_title:    movie.movie_title,
+      owner:          movie.owner,
+      pick_type:      movie.pick_type,
+      release_date:   movie.release_date || 'TBA',
+      breakeven:      movie.breakeven   != null ? movie.breakeven   : null,
+      to_date_profit: movie.profit_td   != null ? movie.profit_td   : null,
+      roi: (movie.profit_td != null && movie.breakeven) ? movie.profit_td / movie.breakeven * 100 : null,
+    };
+    reversedWeeks.forEach(function(wk) {
+      row['week_' + wk] = wg[wk] !== undefined ? wg[wk] : null;
+    });
+    return row;
   });
 
-  var unownedToggle = document.createElement('button');
-  unownedToggle.className = 'btn btn-sm btn-outline-secondary';
-  unownedToggle.textContent = showUnowned ? 'Hide unowned movies' : 'Show unowned movies';
-  unownedToggle.dataset.toggleUnowned = '1';
-  container.appendChild(unownedToggle);
+  // Formatters
+  function fmtCurrency(cell) {
+    var v = cell.getValue();
+    if (v === null || v === undefined) return '<span class="text-neu">—</span>';
+    return fmt(v);
+  }
+  function fmtProfit(cell) {
+    var p = cell.getValue();
+    if (p === null || p === undefined) return '<span class="text-neu">—</span>';
+    return '<span class="' + colorClass(p) + '">' + fmt(p) + '</span>';
+  }
+  function fmtRoi(cell) {
+    var r = cell.getValue();
+    if (r === null || r === undefined) return '<span class="text-neu">—</span>';
+    return '<span class="' + colorClass(r) + '">' + (r > 0 ? '+' : '') + Math.round(r) + '%</span>';
+  }
+  function fmtWeekGross(cell) {
+    var v = cell.getValue();
+    if (v === null || v === undefined) return '<span class="text-neu">—</span>';
+    return '<span class="' + colorClass(v) + '">' + fmt(v) + '</span>';
+  }
 
-  var clear = document.createElement('button');
-  clear.className = 'btn btn-sm btn-outline-secondary';
-  clear.textContent = 'Reset';
-  clear.dataset.clear = '1';
-  container.appendChild(clear);
+  // Columns
+  var titleCol = {
+    title: 'Movie',
+    field: 'movie_title',
+    frozen: true,
+    width: 224,
+    minWidth: 184,
+    cssClass: 'col-movie-title',
+    formatter: function(cell) {
+      var row = cell.getRow().getData();
+      var badge = ownerBadge(row.owner, colorMap);
+      var icon = pickOrSeasonIcon(row.pick_type, row.release_date);
+      var title = '<span class="movie-title-text">' + cell.getValue() + '</span>';
+      return badge + icon + title;
+    },
+    formatterParams: { html: true },
+    tooltip: function(e, cell) { return cell.getValue(); },
+  };
+
+  var releasedCol = {
+    title: 'Released',
+    field: 'release_date',
+    width: 96,
+    minWidth: 88,
+    sorter: 'string',
+    formatter: function(cell) {
+      var v = cell.getValue();
+      if (v === 'TBA' || !v) return '<span class="text-neu">TBA</span>';
+      return formatShortDate(v);
+    },
+    formatterParams: { html: true },
+  };
+
+  var breakevenCol = {
+    title: 'B/E',
+    field: 'breakeven',
+    hozAlign: 'right',
+    width: 88,
+    minWidth: 76,
+    formatter: fmtCurrency,
+    formatterParams: { html: true },
+    sorter: 'number',
+  };
+
+  var profitCol = {
+    title: 'Total Profit',
+    field: 'to_date_profit',
+    hozAlign: 'right',
+    width: 110,
+    minWidth: 96,
+    formatter: fmtProfit,
+    formatterParams: { html: true },
+    sorter: 'number',
+  };
+
+  var roiCol = {
+    title: 'ROI',
+    field: 'roi',
+    hozAlign: 'right',
+    width: 84,
+    minWidth: 72,
+    formatter: fmtRoi,
+    formatterParams: { html: true },
+    sorter: 'number',
+  };
+
+  var weekCols = reversedWeeks.map(function(wk) {
+    var weekNum = parseInt(wk.split('-W')[1], 10);
+    return {
+      title:    'Gross Week #' + weekNum,
+      titleFormatter: function() {
+        var el = document.createElement('div');
+        el.className = 'compact-week-title';
+        el.innerHTML = 'Gross<br>Week&nbsp;#' + weekNum;
+        return el;
+      },
+      field:    'week_' + wk,
+      hozAlign: 'right',
+      width:    96,
+      minWidth: 88,
+      formatter: fmtWeekGross,
+      formatterParams: { html: true },
+      sorter:   'number',
+    };
+  });
+
+  var columns = [titleCol, releasedCol, breakevenCol, profitCol, roiCol].concat(weekCols);
+
+  // Match the Detailed table's default ordering (release date asc, then weeks).
+  var initialSort = allWeeks.length > 0
+    ? [{ column: 'release_date', dir: 'asc' }].concat(
+        allWeeks.map(function(wk) { return { column: 'week_' + wk, dir: 'desc' }; })
+      )
+    : [{ column: 'release_date', dir: 'asc' }];
+
+  var table = new Tabulator('#movie-table', {
+    data:                  rows,
+    columns:               columns,
+    layout:                'fitDataFill',
+    responsiveLayout:      false,
+    initialSort:           initialSort,
+    columnHeaderVertAlign: 'bottom',
+    resizableColumns:      false,
+    selectableRows:        true,
+    pagination:            true,
+    paginationSize:        50,
+    paginationSizeSelector: [10, 25, 50, 100, true],
+  });
+
+  var sortMap = {
+    default:        initialSort,
+    to_date_profit: [{ column: 'to_date_profit', dir: 'desc' }],
+    roi:            [{ column: 'roi', dir: 'desc' }],
+    this_week:      allWeeks.length ? [{ column: 'week_' + allWeeks[allWeeks.length - 1], dir: 'desc' }] : initialSort,
+  };
+
+  return {
+    table: table,
+    initialSort: initialSort,
+    sortMap: sortMap,
+  };
 }
