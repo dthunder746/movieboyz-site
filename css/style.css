@@ -1,5 +1,14 @@
 body { font-size: 0.9rem; }
 
+/* A touch more breathing room on desktop so content doesn't butt against the
+   window scrollbar. px-3 sets 1rem !important, so this needs to outweigh it. */
+@media (min-width: 601px) {
+  .container-fluid.px-3 {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
 .chart-card {
   background: var(--bs-body-bg);
   border: 1px solid var(--bs-border-color);

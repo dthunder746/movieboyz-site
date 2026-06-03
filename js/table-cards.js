@@ -233,6 +233,13 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
   var MOVE_TOL = 10; // px of slop still counted as a tap (not a drag/scroll)
   var press = null;  // active gesture: { card, id, x, y, moved, longFired, timer }
 
+  // #movie-cards is a persistent element; destroy() only clears its innerHTML.
+  // Scope every listener to an AbortController so destroy() can tear the whole
+  // set down at once — otherwise re-entering Cards stacks duplicate listeners
+  // and each tap toggles the card open/closed once per stale set.
+  var ac = new AbortController();
+  var signal = ac.signal;
+
   function cancelTimer() {
     if (press && press.timer) { clearTimeout(press.timer); press.timer = null; }
   }
@@ -251,7 +258,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
       press.timer = null;
       selection.toggle(press.id);
     }, LONG_PRESS_MS);
-  });
+  }, { signal: signal });
 
   container.addEventListener('pointermove', function(e) {
     if (!press || press.moved) return;
@@ -259,7 +266,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
       press.moved = true; // drag/scroll — abandon the gesture
       cancelTimer();
     }
-  });
+  }, { signal: signal });
 
   container.addEventListener('pointerup', function(e) {
     if (!press) return;
@@ -271,11 +278,11 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
     if (!upCard || upCard !== startCard) return;
     var extra = startCard.querySelector('.movie-card-extra');
     if (extra) extra.classList.toggle('d-none');
-  });
+  }, { signal: signal });
 
   function abortPress() { cancelTimer(); press = null; }
-  container.addEventListener('pointercancel', abortPress);
-  container.addEventListener('pointerleave', abortPress);
+  container.addEventListener('pointercancel', abortPress, { signal: signal });
+  container.addEventListener('pointerleave', abortPress, { signal: signal });
 
   // The plot button is a real <button>, so click fires reliably for it.
   container.addEventListener('click', function(e) {
@@ -283,7 +290,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
     if (!plotBtn) return;
     var card = e.target.closest('.movie-card');
     if (card) selection.toggle(card.dataset.imdbId);
-  });
+  }, { signal: signal });
 
   // Desktop right-click also plots (same as long-press)
   container.addEventListener('contextmenu', function(e) {
@@ -291,7 +298,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
     if (!card) return;
     e.preventDefault();
     selection.toggle(card.dataset.imdbId);
-  });
+  }, { signal: signal });
 
   return {
     rerender: render,
@@ -313,6 +320,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
       });
     },
     destroy: function() {
+      ac.abort();
       container.innerHTML = '';
     },
   };

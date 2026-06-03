@@ -1,6 +1,6 @@
 import {
   fmt, fmtPct, colorClass, formatShortDate, pickIcon,
-  weekTitle, isoWeekBounds, dateToIsoWeekKey, getWeekdayAbbr
+  weekTitle, isoWeekBounds, dateToIsoWeekKey, getWeekdayAbbr, ownerBadge
 } from './utils.js';
 
 function shiftIsoDate(iso, deltaDays) {
@@ -30,14 +30,13 @@ export function buildInfoCards(data, colorMap) {
 
   var activeTab = readTabCookie() || 'upcoming';
 
-  function ownerDot(owner) {
-    if (!owner || owner === 'none') return '<span class="text-neu">—</span>';
-    return '<span class="owner-dot" style="background:' + (colorMap[owner] || '#ccc') + '"></span>' + owner;
-  }
-
   function movieIcon(m) {
     var type = m.pick_type || (m.release_date ? 'seasonal' : null);
     return pickIcon(type, m.release_date);
+  }
+
+  function movieCell(m) {
+    return ownerBadge(m.owner, colorMap) + movieIcon(m) + m.movie_title;
   }
 
   function formatWindow(theatrical, digital) {
@@ -57,10 +56,10 @@ export function buildInfoCards(data, colorMap) {
   }).sort(function(a, b) { return a.release_date < b.release_date ? -1 : 1; });
 
   // Full sorted arrays — row count for these is calculated dynamically from container height.
-  var profitable = movies.filter(function(m) { return m.profit_td != null; })
+  var profitable = movies.filter(function(m) { return m.profit_td != null && m.profit_td > 0; })
     .sort(function(a, b) { return b.profit_td - a.profit_td; });
 
-  var worst = movies.filter(function(m) { return m.profit_td != null; })
+  var worst = movies.filter(function(m) { return m.profit_td != null && m.profit_td < 0; })
     .sort(function(a, b) { return a.profit_td - b.profit_td; });
 
   var streamingMovies = movies.filter(function(m) {
@@ -163,26 +162,26 @@ export function buildInfoCards(data, colorMap) {
     if (tabId === 'weekly')    return buildWeeklyPane(tabData);
     if (tabId === 'streaming') return buildStreamingPane();
 
-    var col3Header = tabId === 'upcoming' ? 'Date' : 'Profit (ROI)';
+    var isUpcoming = tabId === 'upcoming';
     var thead = '<thead><tr>'
       + '<th>Movie</th>'
-      + '<th>Owner</th>'
-      + '<th>' + col3Header + '</th>'
+      + (isUpcoming
+          ? '<th>Date</th>'
+          : '<th class="text-end">Profit</th><th class="text-end">ROI</th>')
       + '</tr></thead>';
 
     var rows = tabData.map(function(m) {
-      var col3 = '';
-      if (tabId === 'upcoming') {
-        col3 = formatShortDate(m.release_date);
+      var cells;
+      if (isUpcoming) {
+        cells = '<td>' + formatShortDate(m.release_date) + '</td>';
       } else {
         var roi = m.breakeven ? (m.profit_td / m.breakeven * 100) : null;
-        col3 = '<span class="' + colorClass(m.profit_td) + '">' + fmt(m.profit_td) + '</span>'
-          + ' <span class="text-neu" style="font-size:0.9em">(' + (roi !== null ? fmtPct(roi) : '—') + ')</span>';
+        cells = '<td class="text-end ' + colorClass(m.profit_td) + '">' + fmt(m.profit_td) + '</td>'
+          + '<td class="text-end text-neu">' + (roi !== null ? fmtPct(roi) : '—') + '</td>';
       }
       return '<tr>'
-        + '<td>' + movieIcon(m) + m.movie_title + '</td>'
-        + '<td>' + ownerDot(m.owner) + '</td>'
-        + '<td>' + col3 + '</td>'
+        + '<td>' + movieCell(m) + '</td>'
+        + cells
         + '</tr>';
     }).join('');
 
@@ -202,7 +201,6 @@ export function buildInfoCards(data, colorMap) {
   function buildDailyPane(rows) {
     var thead = '<thead><tr>'
       + '<th>Movie</th>'
-      + '<th>Owner</th>'
       + '<th class="text-end" title="Daily gross">'
       +   '<span class="d-none d-sm-inline">Daily Gross</span>'
       +   '<span class="d-inline d-sm-none">DG</span>'
@@ -214,8 +212,7 @@ export function buildInfoCards(data, colorMap) {
     var body = rows.map(function(r) {
       var m = r.movie;
       return '<tr>'
-        + '<td>' + movieIcon(m) + m.movie_title + '</td>'
-        + '<td>' + ownerDot(m.owner) + '</td>'
+        + '<td>' + movieCell(m) + '</td>'
         + '<td class="text-end">' + fmt(r.gross) + '</td>'
         + '<td class="text-end">' + pctCell(r.pctYd) + '</td>'
         + '<td class="text-end">' + pctCell(r.pctLw) + '</td>'
@@ -233,7 +230,6 @@ export function buildInfoCards(data, colorMap) {
   function buildWeeklyPane(rows) {
     var thead = '<thead><tr>'
       + '<th>Movie</th>'
-      + '<th>Owner</th>'
       + '<th class="text-end">Gross</th>'
       + '<th class="text-end info-pct-col" title="Change vs last week to the same weekday">%LW</th>'
       + '</tr></thead>';
@@ -241,8 +237,7 @@ export function buildInfoCards(data, colorMap) {
     var body = rows.map(function(r) {
       var m = r.movie;
       return '<tr>'
-        + '<td>' + movieIcon(m) + m.movie_title + '</td>'
-        + '<td>' + ownerDot(m.owner) + '</td>'
+        + '<td>' + movieCell(m) + '</td>'
         + '<td class="text-end">' + fmt(r.gross) + '</td>'
         + '<td class="text-end">' + pctCell(r.pctLw) + '</td>'
         + '</tr>';
@@ -260,15 +255,13 @@ export function buildInfoCards(data, colorMap) {
     if (!rows.length) return '';
     var thead = '<thead><tr>'
       + '<th>Movie</th>'
-      + '<th>Owner</th>'
       + '<th>Digital</th>'
       + '<th class="text-end" title="Days from theatrical release to digital release.">Window</th>'
       + '</tr></thead>';
 
     var body = rows.map(function(m) {
       return '<tr>'
-        + '<td>' + movieIcon(m) + m.movie_title + '</td>'
-        + '<td>' + ownerDot(m.owner) + '</td>'
+        + '<td>' + movieCell(m) + '</td>'
         + '<td>' + formatShortDate(m.released_digital) + '</td>'
         + '<td class="text-end">' + formatWindow(m.release_date, m.released_digital) + '</td>'
         + '</tr>';
