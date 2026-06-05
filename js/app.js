@@ -392,6 +392,8 @@ function init(data) {
     roi_asc:      { field: 'roi',            dir: 'asc'  },
     week_desc:    { field: 'this_week',      dir: 'desc' },
     week_asc:     { field: 'this_week',      dir: 'asc'  },
+    lb_desc:      { field: 'rating_lb',      dir: 'desc' },
+    lb_asc:       { field: 'rating_lb',      dir: 'asc'  },
   };
 
   // Tabulator sort spec for a sort id; 'default' is the table's week-gross sort.
@@ -401,6 +403,7 @@ function init(data) {
     if (id.indexOf('release_') === 0)     col = 'release_date';
     else if (id.indexOf('profit_') === 0) col = 'to_date_profit';
     else if (id.indexOf('roi_') === 0)    col = 'roi';
+    else if (id.indexOf('lb_') === 0)     col = 'rating_letterboxd';
     else if (id.indexOf('week_') === 0)   col = _latestWeekCol || 'release_date';
     var dir = (id.slice(-3) === 'asc') ? 'asc' : 'desc';
     return [{ column: col, dir: dir }];
@@ -415,6 +418,7 @@ function init(data) {
     if (f === 'release_date')   return dir === 'asc' ? 'release_asc' : 'release_desc';
     if (f === 'to_date_profit') return dir === 'asc' ? 'profit_asc' : 'profit_desc';
     if (f === 'roi')            return dir === 'asc' ? 'roi_asc' : 'roi_desc';
+    if (f === 'rating_letterboxd') return dir === 'asc' ? 'lb_asc' : 'lb_desc';
     if (_latestWeekCol && f === _latestWeekCol) return dir === 'asc' ? 'week_asc' : 'week_desc';
     return 'custom';
   }
