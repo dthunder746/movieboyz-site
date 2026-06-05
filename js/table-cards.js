@@ -28,13 +28,13 @@ function sparkline(weeks, color) {
 // Diverging ROI meter: centre tick = break-even (0% ROI). Loss side is bounded
 // at −100% (can't lose more than the outlay) and fills toward the left. Profit
 // side: 0→+100% fills green to the +100% mark (always-visible tick at 85%).
-// Anything past +100% is shown as a breakout chevron fill in the lane — never
-// more solid bar. The fill's length is log-scaled, so it just clears the cap at
-// modest ROI and reaches the bar's end at +10000%.
+// Anything past +100% is shown as a breakout fill in the lane that brightens
+// toward its tip — never more solid bar. The fill's length is log-scaled, so it
+// just clears the cap at modest ROI and reaches the bar's end at +12500%.
 var ROI_CENTER = 50;    // break-even, visual %
 var ROI_CAP = 85;       // +100% mark, visual % (green fill stops here)
-var ROI_BREAK = 100;    // ROI% at the cap; beyond this is breakout chevrons
-var ROI_MAX = 10000;    // ROI% whose chevron fill reaches the bar's end (log-scaled)
+var ROI_BREAK = 100;    // ROI% at the cap; beyond this is the breakout fill
+var ROI_MAX = 12500;    // ROI% whose breakout fill reaches the bar's end (log-scaled)
 function roiMeter(roi) {
   if (roi === null || roi === undefined) return '';
   var pos = roi >= 0;

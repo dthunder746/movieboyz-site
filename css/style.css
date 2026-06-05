@@ -1780,19 +1780,18 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
   background: var(--bs-body-color);
   opacity: 0.75;
 }
-/* Breakout chevron fill for ROI > +100% — repeating green arrowheads past the
-   cap tick. Width is set inline (log-scaled), reaching the bar's end at the top
-   of the range. A mask paints the chevrons so they inherit the success colour. */
+/* Breakout fill for ROI > +100% — a green bar past the cap tick that brightens
+   toward its tip. Width is set inline (log-scaled), reaching the bar's end at the
+   top of the range. Sits 1px taller than the bar to read as a breakout. */
 .roi-over {
   position: absolute;
   left: 85%;
   top: -1px;
   height: 8px;
-  min-width: 8px;
+  min-width: 4px;
   margin-left: 2px;
-  background: var(--bs-success);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='8'%3E%3Cpolygon points='1,0 7,4 1,8' fill='%23000'/%3E%3C/svg%3E") left center / 9px 8px repeat-x;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='8'%3E%3Cpolygon points='1,0 7,4 1,8' fill='%23000'/%3E%3C/svg%3E") left center / 9px 8px repeat-x;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--bs-success), color-mix(in srgb, var(--bs-success), white 45%));
 }
 .roi-scale {
   position: relative;
