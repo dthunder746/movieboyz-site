@@ -1,12 +1,7 @@
-import { fmt, fmtPct, colorClass, pickIcon } from '../utils.js';
+import { fmt, fmtPct, colorClass, pickIcon, ownerBadge } from '../utils.js';
 import { picksForDraft, profitRanksForSeason } from './season-helpers.js';
 
 var SEASON_LABEL = { WINTER: 'Winter', SUMMER: 'Summer', FALL: 'Fall' };
-
-function ownerCell(owner, colorMap) {
-  if (!owner || owner === 'none') return '<span class="text-neu">—</span>';
-  return '<span class="owner-dot" style="background:' + (colorMap[owner] || '#ccc') + '"></span>' + owner;
-}
 
 function profitCell(profit) {
   if (profit == null) return '<span class="text-neu">—</span>';
@@ -53,8 +48,7 @@ export function buildPicksTable(data, season, colorMap, mountEl) {
         + ' data-cleared-imdb="' + (m.clearedImdbId || '') + '"'
         + ghostTitleAttr + '>'
         + '<td class="text-end">' + m.draft_pick + '</td>'
-        + '<td><span class="draft-row-ghost-label">— cleared —</span></td>'
-        + '<td>' + ownerCell(m.owner, colorMap) + '</td>'
+        + '<td>' + ownerBadge(m.owner, colorMap) + '<span class="draft-row-ghost-label">— cleared —</span></td>'
         + '<td class="text-end"><span class="text-neu">—</span></td>'
         + '<td class="text-end"><span class="text-neu">—</span></td>'
         + '<td class="text-end"><span class="text-neu">—</span></td>'
@@ -77,10 +71,10 @@ export function buildPicksTable(data, season, colorMap, mountEl) {
     var clearCell = isLocked
       ? '<td class="cell-clear"></td>'
       : '<td class="cell-clear"><button type="button" class="draft-clear-pick" aria-label="Clear pick">×</button></td>';
+    var titleAttr = m.movie_title ? ' title="' + m.movie_title.replace(/"/g, '&quot;') + '"' : '';
     return '<tr' + classAttr + dataAttrs + '>'
       + '<td class="text-end">' + m.draft_pick + '</td>'
-      + '<td>' + pickIcon(m.pick_type, m.release_date) + m.movie_title + '</td>'
-      + '<td>' + ownerCell(m.owner, colorMap) + '</td>'
+      + '<td class="cell-title"' + titleAttr + '>' + ownerBadge(m.owner, colorMap) + pickIcon(m.pick_type, m.release_date) + '<span class="draft-pick-title">' + m.movie_title + '</span></td>'
       + '<td class="text-end">' + (m.breakeven != null ? fmt(m.breakeven) : '<span class="text-neu">—</span>') + '</td>'
       + '<td class="text-end">' + profitCell(m.profit_td) + '</td>'
       + '<td class="text-end">' + roiCell(m.profit_td, m.breakeven) + '</td>'
@@ -97,7 +91,6 @@ export function buildPicksTable(data, season, colorMap, mountEl) {
     + '<thead><tr>'
     +   '<th class="text-end">#</th>'
     +   '<th>Movie</th>'
-    +   '<th>Owner</th>'
     +   '<th class="text-end">B/E</th>'
     +   '<th class="text-end">Profit</th>'
     +   '<th class="text-end">ROI</th>'

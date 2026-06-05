@@ -982,7 +982,16 @@ body { font-size: 0.9rem; }
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
-  min-width: 600px;
+  min-width: 540px;
+}
+
+.draft-picks-table .draft-pick-title {
+  display: inline-block;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .draft-picks-table th,
