@@ -19,18 +19,22 @@ function weekAxisIdx(n) {
 // Weekly-gross module: a caption ("This week" value), mini gross-by-week bars
 // (oldest → newest, latest emphasised), and an ISO-week axis centred under the
 // labelled bars. Hidden until a movie has at least two weeks of data.
-function weeklyModule(weeks, color) {
+function weeklyModule(weeks, color, thisWeek) {
   if (!weeks || weeks.length < 1) return '';
   var vals = weeks.map(function(w) { return w.gross || 0; });
   var n = vals.length;
-  // Before the sparkline appears (first week, < 2 data points) show only a
-  // right-aligned caption that names itself, since there's no "Weekly gross" label.
-  if (n < 2) {
-    return '<div class="spark-caption spark-caption-solo">'
-      + '<span class="spark-cap-val"><span class="spark-cap-wk">Gross this week</span>' + fmt(vals[n - 1]) + '</span></div>';
-  }
   var max = Math.max.apply(null, vals);
-  if (max <= 0) return '';
+  var hasSpark = n >= 2 && max > 0;
+  // "This week" is the current week specifically (not the latest bar). Blank
+  // when the movie earned nothing this week — which is most of them.
+  var thisWeekStr = (thisWeek != null) ? fmt(thisWeek) : null;
+  // No sparkline yet (or no history): show a solo caption only when there's an
+  // actual current-week gross to report; otherwise nothing.
+  if (!hasSpark) {
+    if (thisWeekStr === null) return '';
+    return '<div class="spark-caption spark-caption-solo">'
+      + '<span class="spark-cap-val"><span class="spark-cap-wk">Gross this week</span>' + thisWeekStr + '</span></div>';
+  }
   var W = 140, H = 30, gap = n > 24 ? 1 : 2;
   var bw = (W - gap * (n - 1)) / n;
   var bars = vals.map(function(v, i) {
@@ -41,8 +45,10 @@ function weeklyModule(weeks, color) {
       '" height="' + h.toFixed(1) + '" rx="0.6" fill="' + color + '" opacity="' + (last ? 1 : 0.5) + '"/>';
   }).join('');
   var svg = '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' + bars + '</svg>';
-  var caption = '<div class="spark-caption"><span class="spark-cap-label">Weekly gross</span>'
-    + '<span class="spark-cap-val"><span class="spark-cap-wk">This week</span>' + fmt(vals[n - 1]) + '</span></div>';
+  var rightVal = (thisWeekStr !== null)
+    ? '<span class="spark-cap-val"><span class="spark-cap-wk">This week</span>' + thisWeekStr + '</span>'
+    : '';
+  var caption = '<div class="spark-caption"><span class="spark-cap-label">Weekly gross</span>' + rightVal + '</div>';
   var axis = weekAxisIdx(n).map(function(i) {
     var center = (i * (bw + gap) + bw / 2) / W * 100;
     return '<span style="left:' + center.toFixed(1) + '%">W' + weeks[i].num + '</span>';
@@ -215,7 +221,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
       var rankLine = r.rank
         ? '<div class="extra-rank">Profit rank <strong>#' + r.rank + '</strong> of ' + rankTotal + '</div>'
         : '';
-      var sparkMod = weeklyModule(r.weeks, ownerColor);
+      var sparkMod = weeklyModule(r.weeks, ownerColor, r.this_week);
       var ratingChip = (r.rating_lb == null) ? ''
         : '<span class="rating-chip ' + ratingColorClass(r.rating_lb) + '"><img class="rating-icon" src="https://www.google.com/s2/favicons?domain=letterboxd.com&sz=32" alt="Letterboxd" width="14" height="14">' + (r.rating_lb / 20).toFixed(1) + '</span>';
       var metaBE = r.breakeven ? '  ·  B/E ' + fmt(r.breakeven) : '';
