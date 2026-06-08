@@ -7,8 +7,19 @@ function deltaText(value, prev) {
   return '(' + (pct > 0 ? '+' : '') + pct + '%)';
 }
 
-// Mini gross-by-week bars (oldest → newest, most recent week emphasised).
-function sparkline(weeks, color) {
+// Pick which bars get an axis label: always the first and latest, plus a few
+// evenly spaced between, scaled to the run length so labels don't crowd.
+function weekAxisIdx(n) {
+  var count = n <= 4 ? n : n <= 8 ? 4 : n <= 12 ? 5 : 6;
+  var idx = [];
+  for (var j = 0; j < count; j++) idx.push(Math.round(j * (n - 1) / ((count - 1) || 1)));
+  return idx.filter(function(v, i) { return idx.indexOf(v) === i; });
+}
+
+// Weekly-gross module: a caption ("This week" value), mini gross-by-week bars
+// (oldest → newest, latest emphasised), and an ISO-week axis centred under the
+// labelled bars. Hidden until a movie has at least two weeks of data.
+function weeklyModule(weeks, color) {
   if (!weeks || weeks.length < 2) return '';
   var vals = weeks.map(function(w) { return w.gross || 0; });
   var max = Math.max.apply(null, vals);
@@ -22,7 +33,14 @@ function sparkline(weeks, color) {
     return '<rect x="' + x.toFixed(1) + '" y="' + (H - h).toFixed(1) + '" width="' + bw.toFixed(1) +
       '" height="' + h.toFixed(1) + '" rx="0.6" fill="' + color + '" opacity="' + (last ? 1 : 0.5) + '"/>';
   }).join('');
-  return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' + bars + '</svg>';
+  var svg = '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' + bars + '</svg>';
+  var caption = '<div class="spark-caption"><span class="spark-cap-label">Weekly gross</span>'
+    + '<span class="spark-cap-val"><span class="spark-cap-wk">This week</span>' + fmt(vals[n - 1]) + '</span></div>';
+  var axis = weekAxisIdx(n).map(function(i) {
+    var center = (i * (bw + gap) + bw / 2) / W * 100;
+    return '<span style="left:' + center.toFixed(1) + '%">W' + weeks[i].num + '</span>';
+  }).join('');
+  return caption + svg + '<div class="spark-weeks">' + axis + '</div>';
 }
 
 // Diverging ROI meter: centre tick = break-even (0% ROI). Loss side is bounded
@@ -190,7 +208,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
       var rankLine = r.rank
         ? '<div class="extra-rank">Profit rank <strong>#' + r.rank + '</strong> of ' + rankTotal + '</div>'
         : '';
-      var spark = sparkline(r.weeks, ownerColor);
+      var sparkMod = weeklyModule(r.weeks, ownerColor);
       var ratingChip = (r.rating_lb == null) ? ''
         : '<span class="rating-chip ' + ratingColorClass(r.rating_lb) + '"><img class="rating-icon" src="https://www.google.com/s2/favicons?domain=letterboxd.com&sz=32" alt="Letterboxd" width="14" height="14">' + (r.rating_lb / 20).toFixed(1) + '</span>';
       var metaBE = r.breakeven ? '  ·  B/E ' + fmt(r.breakeven) : '';
@@ -215,7 +233,7 @@ export function buildCards(data, colorMap, selection, visibleIds, sortField, sor
         +     ratingChip
         +   '</div>'
         +   roiMeter(r.roi)
-        +   (spark ? '<div class="movie-card-spark">' + spark + '</div>' : '')
+        +   (sparkMod ? '<div class="movie-card-spark">' + sparkMod + '</div>' : '')
         +   '<div class="movie-card-extra d-none">'
         +     rankLine
         +     weekTable
