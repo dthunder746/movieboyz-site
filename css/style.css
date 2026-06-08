@@ -1823,6 +1823,7 @@ tr[data-swapped="1"] td:last-child { border-top-right-radius: 6px; border-bottom
   color: var(--bs-secondary-color);
   font-weight: 600;
 }
+.spark-caption-solo { justify-content: flex-end; margin-bottom: 0; }
 .spark-cap-val { font-size: 0.82rem; font-weight: 700; }
 .spark-cap-wk {
   margin-right: 5px;

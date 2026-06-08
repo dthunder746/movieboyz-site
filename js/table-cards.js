@@ -20,11 +20,18 @@ function weekAxisIdx(n) {
 // (oldest → newest, latest emphasised), and an ISO-week axis centred under the
 // labelled bars. Hidden until a movie has at least two weeks of data.
 function weeklyModule(weeks, color) {
-  if (!weeks || weeks.length < 2) return '';
+  if (!weeks || weeks.length < 1) return '';
   var vals = weeks.map(function(w) { return w.gross || 0; });
+  var n = vals.length;
+  // Before the sparkline appears (first week, < 2 data points) show only a
+  // right-aligned caption that names itself, since there's no "Weekly gross" label.
+  if (n < 2) {
+    return '<div class="spark-caption spark-caption-solo">'
+      + '<span class="spark-cap-val"><span class="spark-cap-wk">Gross this week</span>' + fmt(vals[n - 1]) + '</span></div>';
+  }
   var max = Math.max.apply(null, vals);
   if (max <= 0) return '';
-  var W = 140, H = 30, n = vals.length, gap = n > 24 ? 1 : 2;
+  var W = 140, H = 30, gap = n > 24 ? 1 : 2;
   var bw = (W - gap * (n - 1)) / n;
   var bars = vals.map(function(v, i) {
     var h = Math.max(1.5, (v / max) * H);
