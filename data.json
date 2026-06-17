@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-17 17:21:15",
+  "fetched_at": "2026-06-17 23:21:46",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-06-17T09-21-05Z",
+  "last_processed_snapshot": "2026-06-17T15-21-36Z",
   "latest_date": "2026-06-15",
   "latest_profit_date": "2026-06-15",
   "movies": {
@@ -5057,7 +5057,7 @@
       },
       "days_running": 3,
       "draft_pick": 11,
-      "estimated_budget": true,
+      "estimated_budget": false,
       "gross_td": 98196385,
       "movie_title": "Disclosure Day",
       "owner": "Connie",
@@ -15301,8 +15301,8 @@
       "year": 2026
     },
     "tt29355505": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 500000000,
+      "budget": 250000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
