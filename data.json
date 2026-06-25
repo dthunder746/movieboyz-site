@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-26 02:38:28",
+  "fetched_at": "2026-06-26 04:38:40",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-06-25T18-38-17Z",
+  "last_processed_snapshot": "2026-06-25T20-38-30Z",
   "latest_date": "2026-06-24",
   "latest_profit_date": "2026-06-24",
   "movies": {
@@ -48088,8 +48088,8 @@
       "year": 2026
     },
     "tt8814476": {
-      "breakeven": 350000000,
-      "budget": 175000000,
+      "breakeven": 340000000,
+      "budget": 170000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -48242,7 +48242,7 @@
       },
       "days_running": null,
       "draft_pick": 5,
-      "estimated_budget": true,
+      "estimated_budget": false,
       "gross_td": null,
       "movie_title": "Supergirl: Woman of Tomorrow",
       "owner": "Chris",
