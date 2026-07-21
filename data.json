@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-21 05:51:05",
+  "fetched_at": "2026-07-21 10:51:44",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-07-20T21-50-55Z",
+  "last_processed_snapshot": "2026-07-21T02-51-33Z",
   "latest_date": "2026-07-19",
   "latest_profit_date": "2026-07-19",
   "movies": {
@@ -9587,6 +9587,27 @@
         "2026-W10": 99553,
         "2026-W12": 78712
       },
+      "year": 2026
+    },
+    "tt2012616": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "Motor City",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-07-24",
+      "released_digital": null,
+      "season": "SUMMER",
+      "weekly_gross": {},
       "year": 2026
     },
     "tt2056785": {
@@ -39919,7 +39940,7 @@
         "2026-07-16": 0,
         "2026-07-17": 0,
         "2026-07-18": 0,
-        "2026-07-19": 0
+        "2026-07-19": 45870
       },
       "daily_gross": {
         "2026-04-01": 0,
@@ -40030,12 +40051,12 @@
         "2026-07-16": 132218241,
         "2026-07-17": 132218241,
         "2026-07-18": 132218241,
-        "2026-07-19": 132218241
+        "2026-07-19": 132264111
       },
       "days_running": 107,
       "draft_pick": 20,
       "estimated_budget": false,
-      "gross_td": 132218241,
+      "gross_td": 132264111,
       "movie_title": "The Drama",
       "owner": "Emerson",
       "pick_type": "seasonal",
@@ -40148,9 +40169,9 @@
         "2026-07-16": 76218241,
         "2026-07-17": 76218241,
         "2026-07-18": 76218241,
-        "2026-07-19": 76218241
+        "2026-07-19": 76264111
       },
-      "profit_td": 76218241,
+      "profit_td": 76264111,
       "ratings": {
         "fetched_at": "2026-07-05",
         "imdb": {
@@ -40197,7 +40218,8 @@
         "2026-W23": 2341826,
         "2026-W24": 490311,
         "2026-W26": 1212114,
-        "2026-W28": -259074
+        "2026-W28": -259074,
+        "2026-W29": 45870
       },
       "year": 2026
     },
@@ -50228,7 +50250,7 @@
           "votes": 2
         }
       },
-      "release_date": "2026-09-04",
+      "release_date": "2026-11-13",
       "released_digital": null,
       "season": "FALL",
       "weekly_gross": {},
@@ -51985,6 +52007,27 @@
       "release_date": "2026-10-09",
       "released_digital": null,
       "season": "FALL",
+      "weekly_gross": {},
+      "year": 2026
+    },
+    "tt36629891": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "Her Private Hell",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-07-24",
+      "released_digital": null,
+      "season": "SUMMER",
       "weekly_gross": {},
       "year": 2026
     },
@@ -63386,7 +63429,7 @@
         "2026-07-16": 1375035560,
         "2026-07-17": 1375047560,
         "2026-07-18": 1375067560,
-        "2026-07-19": 1376085300
+        "2026-07-19": 1376131170
       },
       "total": {
         "2026-02-04": 0,
@@ -63554,7 +63597,7 @@
         "2026-07-16": 1306444187,
         "2026-07-17": 1306466437,
         "2026-07-18": 1306506187,
-        "2026-07-19": 1308194480
+        "2026-07-19": 1308240350
       }
     },
     "Marcus": {
