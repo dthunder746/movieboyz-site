@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-29 18:09:17",
+  "fetched_at": "2026-07-29 21:09:36",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-07-29T10-09-05Z",
+  "last_processed_snapshot": "2026-07-29T13-09-24Z",
   "latest_date": "2026-07-27",
   "latest_profit_date": "2026-07-27",
   "movies": {
@@ -16670,7 +16670,8 @@
         "2026-05-01": 0,
         "2026-05-02": 0,
         "2026-05-03": 0,
-        "2026-05-04": 0
+        "2026-05-04": 0,
+        "2026-07-27": 0
       },
       "daily_gross": {
         "2026-04-13": 0,
@@ -16694,12 +16695,13 @@
         "2026-05-01": 0,
         "2026-05-02": 0,
         "2026-05-03": 0,
-        "2026-05-04": 0
+        "2026-05-04": 0,
+        "2026-07-27": 0
       },
-      "days_running": 53,
+      "days_running": null,
       "draft_pick": null,
       "estimated_budget": false,
-      "gross_td": 0,
+      "gross_td": null,
       "movie_title": "Toxic",
       "owner": "none",
       "pick_type": null,
@@ -16725,9 +16727,10 @@
         "2026-05-01": 0,
         "2026-05-02": 0,
         "2026-05-03": 0,
-        "2026-05-04": 0
+        "2026-05-04": 0,
+        "2026-07-27": 0
       },
-      "profit_td": 0,
+      "profit_td": null,
       "ratings": {
         "fetched_at": "2026-07-29",
         "imdb": {
@@ -16759,7 +16762,7 @@
           "votes": 2
         }
       },
-      "release_date": "2026-06-04",
+      "release_date": "2026-08-26",
       "released_digital": null,
       "season": "SUMMER",
       "weekly_gross": {},
