@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-05 06:24:33",
+  "fetched_at": "2026-08-05 08:24:46",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-08-04T22-24-22Z",
+  "last_processed_snapshot": "2026-08-05T00-24-35Z",
   "latest_date": "2026-08-03",
   "latest_profit_date": "2026-08-03",
   "movies": {
@@ -59435,8 +59435,8 @@
       "year": 2026
     },
     "tt36893729": {
-      "breakeven": 12000000,
-      "budget": 6000000,
+      "breakeven": 11000000,
+      "budget": 5500000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -59669,7 +59669,7 @@
       },
       "days_running": null,
       "draft_pick": null,
-      "estimated_budget": true,
+      "estimated_budget": false,
       "gross_td": null,
       "movie_title": "Ice Cream Man",
       "owner": "none",
