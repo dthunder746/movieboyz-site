@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-06 05:26:46",
+  "fetched_at": "2026-08-06 18:27:56",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-08-05T21-26-36Z",
+  "last_processed_snapshot": "2026-08-06T10-27-45Z",
   "latest_date": "2026-08-04",
   "latest_profit_date": "2026-08-04",
   "movies": {
@@ -1080,10 +1080,10 @@
       },
       "profit_td": -7135743,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 65,
-          "votes": 1929
+          "score": 66,
+          "votes": 2073
         },
         "letterboxd": {
           "score": 66,
@@ -5054,14 +5054,14 @@
       },
       "profit_td": 13782174,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": 79,
-          "votes": 12212
+          "votes": 21949
         },
         "letterboxd": {
           "score": 80,
-          "votes": 423731
+          "votes": 438562
         },
         "metacritic": {
           "score": 82,
@@ -5069,19 +5069,19 @@
         },
         "rt_audience": {
           "score": 89,
-          "votes": 209
+          "votes": 212
         },
         "rt_critic": {
           "score": 97,
-          "votes": 259
+          "votes": 262
         },
         "tmdb": {
-          "score": 78,
-          "votes": 111
+          "score": 77,
+          "votes": 115
         },
         "trakt": {
           "score": 81,
-          "votes": 1036
+          "votes": 1079
         }
       },
       "release_date": "2026-07-10",
@@ -10803,10 +10803,10 @@
       },
       "profit_td": -57278254,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 59,
-          "votes": 282
+          "score": 61,
+          "votes": 2108
         },
         "letterboxd": {
           "score": 56,
@@ -12943,10 +12943,10 @@
       },
       "profit_td": 705469617,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": null,
-          "votes": null
+          "score": 82,
+          "votes": 119495
         },
         "letterboxd": {
           "score": 82,
@@ -17584,14 +17584,14 @@
       },
       "profit_td": -236167847,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 57,
-          "votes": 6785
+          "score": 58,
+          "votes": 11973
         },
         "letterboxd": {
           "score": 54,
-          "votes": 105954
+          "votes": 109050
         },
         "metacritic": {
           "score": 42,
@@ -17599,19 +17599,19 @@
         },
         "rt_audience": {
           "score": 88,
-          "votes": 440
+          "votes": 442
         },
         "rt_critic": {
           "score": 31,
-          "votes": 191
+          "votes": 192
         },
         "tmdb": {
           "score": 58,
-          "votes": 163
+          "votes": 168
         },
         "trakt": {
           "score": 73,
-          "votes": 1327
+          "votes": 1362
         }
       },
       "release_date": "2026-07-10",
@@ -23543,10 +23543,10 @@
       },
       "profit_td": 569518701,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": 75,
-          "votes": 48435
+          "votes": 60252
         },
         "letterboxd": {
           "score": 74,
@@ -23566,7 +23566,7 @@
         },
         "tmdb": {
           "score": 74,
-          "votes": 742
+          "votes": 756
         },
         "trakt": {
           "score": 82,
@@ -24358,10 +24358,10 @@
       },
       "profit_td": 50000,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": 56,
-          "votes": 791
+          "votes": 794
         },
         "letterboxd": {
           "score": 52,
@@ -28334,14 +28334,14 @@
       },
       "profit_td": -383780,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 71,
-          "votes": 133
+          "score": 61,
+          "votes": 1071
         },
         "letterboxd": {
           "score": 52,
-          "votes": 4696
+          "votes": 4885
         },
         "metacritic": {
           "score": 50,
@@ -28349,19 +28349,19 @@
         },
         "rt_audience": {
           "score": 69,
-          "votes": 24
+          "votes": 25
         },
         "rt_critic": {
           "score": 76,
           "votes": 25
         },
         "tmdb": {
-          "score": 85,
-          "votes": 13
+          "score": 86,
+          "votes": 14
         },
         "trakt": {
-          "score": 64,
-          "votes": 34
+          "score": 67,
+          "votes": 37
         }
       },
       "release_date": "2026-07-24",
@@ -33392,14 +33392,14 @@
       },
       "profit_td": 6598132,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 75,
-          "votes": 7595
+          "score": 74,
+          "votes": 9352
         },
         "letterboxd": {
           "score": 54,
-          "votes": 20519
+          "votes": 20765
         },
         "metacritic": {
           "score": 49,
@@ -33407,7 +33407,7 @@
         },
         "rt_audience": {
           "score": 92,
-          "votes": 600
+          "votes": 601
         },
         "rt_critic": {
           "score": 61,
@@ -33419,7 +33419,7 @@
         },
         "trakt": {
           "score": 76,
-          "votes": 142
+          "votes": 150
         }
       },
       "release_date": "2026-07-03",
@@ -36703,10 +36703,10 @@
       },
       "profit_td": -19365123,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 58,
-          "votes": 169
+          "score": 63,
+          "votes": 1102
         },
         "letterboxd": {
           "score": 68,
@@ -36725,8 +36725,8 @@
           "votes": 118
         },
         "tmdb": {
-          "score": 58,
-          "votes": 11
+          "score": 60,
+          "votes": 12
         },
         "trakt": {
           "score": 60,
@@ -43213,10 +43213,10 @@
       },
       "profit_td": 282146275,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": 65,
-          "votes": 12761
+          "votes": 18418
         },
         "letterboxd": {
           "score": 64,
@@ -44204,10 +44204,10 @@
       },
       "profit_td": 8420625,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": 69,
-          "votes": 399
+          "votes": 405
         },
         "letterboxd": {
           "score": 72,
@@ -48201,10 +48201,10 @@
       },
       "profit_td": 430896155,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": null,
-          "votes": null
+          "score": 85,
+          "votes": 336028
         },
         "letterboxd": {
           "score": 88,
@@ -54639,7 +54639,37 @@
       "pick_type": null,
       "profit": {},
       "profit_td": null,
-      "ratings": null,
+      "ratings": {
+        "fetched_at": "2026-08-06",
+        "imdb": {
+          "score": 82,
+          "votes": 1249
+        },
+        "letterboxd": {
+          "score": 78,
+          "votes": 9799
+        },
+        "metacritic": {
+          "score": 82,
+          "votes": 19
+        },
+        "rt_audience": {
+          "score": null,
+          "votes": 0
+        },
+        "rt_critic": {
+          "score": 90,
+          "votes": 49
+        },
+        "tmdb": {
+          "score": 77,
+          "votes": 3
+        },
+        "trakt": {
+          "score": 81,
+          "votes": 25
+        }
+      },
       "release_date": "2026-10-09",
       "released_digital": null,
       "season": "FALL",
@@ -57563,7 +57593,7 @@
       },
       "profit_td": -98000000,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": null,
           "votes": null
@@ -58203,7 +58233,37 @@
       "pick_type": null,
       "profit": {},
       "profit_td": null,
-      "ratings": null,
+      "ratings": {
+        "fetched_at": "2026-08-06",
+        "imdb": {
+          "score": null,
+          "votes": null
+        },
+        "letterboxd": {
+          "score": null,
+          "votes": null
+        },
+        "metacritic": {
+          "score": null,
+          "votes": null
+        },
+        "rt_audience": {
+          "score": null,
+          "votes": null
+        },
+        "rt_critic": {
+          "score": null,
+          "votes": null
+        },
+        "tmdb": {
+          "score": null,
+          "votes": null
+        },
+        "trakt": {
+          "score": null,
+          "votes": null
+        }
+      },
       "release_date": "2026-12-04",
       "released_digital": null,
       "season": "FALL",
@@ -59068,7 +59128,7 @@
       },
       "profit_td": -10989727,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": null,
           "votes": null
@@ -59468,14 +59528,14 @@
       },
       "profit_td": -5567909,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 68,
-          "votes": 1134
+          "score": 69,
+          "votes": 1414
         },
         "letterboxd": {
           "score": 68,
-          "votes": 20881
+          "votes": 20977
         },
         "metacritic": {
           "score": 66,
@@ -59490,12 +59550,12 @@
           "votes": 135
         },
         "tmdb": {
-          "score": 36,
+          "score": 37,
           "votes": 4
         },
         "trakt": {
-          "score": 68,
-          "votes": 59
+          "score": 69,
+          "votes": 60
         }
       },
       "release_date": "2026-07-10",
@@ -64477,7 +64537,7 @@
       },
       "profit_td": 34263829,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
           "score": null,
           "votes": null
@@ -66175,10 +66235,10 @@
       },
       "profit_td": 7373185,
       "ratings": {
-        "fetched_at": "2026-08-05",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 67,
-          "votes": 5424
+          "score": 66,
+          "votes": 6170
         },
         "letterboxd": {
           "score": 70,
@@ -67970,14 +68030,14 @@
       },
       "profit_td": null,
       "ratings": {
-        "fetched_at": "2026-07-30",
+        "fetched_at": "2026-08-06",
         "imdb": {
-          "score": 63,
-          "votes": 4440
+          "score": 62,
+          "votes": 4737
         },
         "letterboxd": {
           "score": 60,
-          "votes": 30077
+          "votes": 30416
         },
         "metacritic": {
           "score": null,
@@ -67997,7 +68057,7 @@
         },
         "trakt": {
           "score": 69,
-          "votes": 577
+          "votes": 590
         }
       },
       "release_date": "2026-08-21",
