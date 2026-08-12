@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-12 05:38:46",
+  "fetched_at": "2026-08-12 09:39:11",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-08-11T21-38-35Z",
+  "last_processed_snapshot": "2026-08-12T01-39-00Z",
   "latest_date": "2026-08-10",
   "latest_profit_date": "2026-08-10",
   "movies": {
@@ -13082,6 +13082,27 @@
       "weekly_gross": {},
       "year": 2026
     },
+    "tt22030122": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "Bad Apples",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-09-18",
+      "released_digital": null,
+      "season": "FALL",
+      "weekly_gross": {},
+      "year": 2026
+    },
     "tt22084616": {
       "breakeven": 450000000,
       "budget": 225000000,
@@ -20966,6 +20987,27 @@
         }
       },
       "release_date": "2026-09-25",
+      "released_digital": null,
+      "season": "FALL",
+      "weekly_gross": {},
+      "year": 2026
+    },
+    "tt27988879": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "Ramayana",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-11-06",
       "released_digital": null,
       "season": "FALL",
       "weekly_gross": {},
@@ -37383,6 +37425,27 @@
       },
       "year": 2026
     },
+    "tt32321285": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "Josephine",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-11-20",
+      "released_digital": null,
+      "season": "FALL",
+      "weekly_gross": {},
+      "year": 2026
+    },
     "tt32321317": {
       "breakeven": 2000000,
       "budget": 1000000,
@@ -53237,15 +53300,22 @@
     "tt34491649": {
       "breakeven": null,
       "budget": 0,
-      "daily_change": {},
-      "daily_gross": {},
+      "daily_change": {
+        "2026-08-10": 0
+      },
+      "daily_gross": {
+        "2026-08-10": 0
+      },
       "days_running": null,
-      "estimated_budget": null,
+      "draft_pick": null,
+      "estimated_budget": false,
       "gross_td": null,
       "movie_title": "Zero A.D.",
       "owner": "none",
       "pick_type": null,
-      "profit": {},
+      "profit": {
+        "2026-08-10": 0
+      },
       "profit_td": null,
       "ratings": {
         "fetched_at": "2026-05-02",
@@ -53278,11 +53348,11 @@
           "votes": 2
         }
       },
-      "release_date": null,
+      "release_date": "2026-12-11",
       "released_digital": null,
-      "season": null,
+      "season": "FALL",
       "weekly_gross": {},
-      "year": "TBA"
+      "year": 2026
     },
     "tt34611096": {
       "breakeven": null,
