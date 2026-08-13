@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-14 05:49:24",
+  "fetched_at": "2026-08-14 06:49:30",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-08-13T21-49-14Z",
+  "last_processed_snapshot": "2026-08-13T22-49-23Z",
   "latest_date": "2026-08-12",
   "latest_profit_date": "2026-08-12",
   "movies": {
@@ -64871,6 +64871,27 @@
       },
       "year": 2026
     },
+    "tt37281055": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "Buddy",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-08-28",
+      "released_digital": null,
+      "season": "SUMMER",
+      "weekly_gross": {},
+      "year": 2026
+    },
     "tt37287335": {
       "breakeven": 2000000,
       "budget": 1000000,
@@ -66213,7 +66234,7 @@
       "draft_pick": null,
       "estimated_budget": false,
       "gross_td": null,
-      "movie_title": "Daniel: The Fiery Furnace",
+      "movie_title": "Daniel and the Fiery Furnace",
       "owner": "none",
       "pick_type": null,
       "profit": {
