@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-16 05:53:26",
+  "fetched_at": "2026-08-16 19:54:29",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-08-15T21-53-19Z",
+  "last_processed_snapshot": "2026-08-16T11-54-22Z",
   "latest_date": "2026-08-14",
   "latest_profit_date": "2026-08-14",
   "movies": {
