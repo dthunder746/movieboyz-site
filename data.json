@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-18 05:57:14",
+  "fetched_at": "2026-08-18 09:57:43",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-08-17T21-57-06Z",
+  "last_processed_snapshot": "2026-08-18T01-57-32Z",
   "latest_date": "2026-08-16",
   "latest_profit_date": "2026-08-16",
   "movies": {
@@ -21064,8 +21064,8 @@
       "year": 2026
     },
     "tt27706593": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 20000000,
+      "budget": 10000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -21324,7 +21324,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 1094039,
       "movie_title": "The Rivals of Amziah King",
       "owner": "none",
@@ -21453,11 +21453,11 @@
         "2026-08-11": 0,
         "2026-08-12": 0,
         "2026-08-13": 0,
-        "2026-08-14": 1027000,
-        "2026-08-15": 1027000,
-        "2026-08-16": 1094039
+        "2026-08-14": -18973000,
+        "2026-08-15": -18973000,
+        "2026-08-16": -18905961
       },
-      "profit_td": 1094039,
+      "profit_td": -18905961,
       "ratings": {
         "fetched_at": "2026-08-18",
         "imdb": {
@@ -39833,7 +39833,7 @@
           "votes": 6
         }
       },
-      "release_date": "2026-09-25",
+      "release_date": "2026-10-16",
       "released_digital": null,
       "season": "FALL",
       "weekly_gross": {},
@@ -48868,8 +48868,8 @@
       "year": 2026
     },
     "tt33070884": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 30000000,
+      "budget": 15000000,
       "daily_change": {
         "2026-08-10": 0,
         "2026-08-11": 0,
@@ -48890,7 +48890,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 2689529,
       "movie_title": "The Brink Of War",
       "owner": "none",
@@ -48900,11 +48900,11 @@
         "2026-08-11": 0,
         "2026-08-12": 0,
         "2026-08-13": 0,
-        "2026-08-14": 2684100,
-        "2026-08-15": 2684100,
-        "2026-08-16": 2689529
+        "2026-08-14": -27315900,
+        "2026-08-15": -27315900,
+        "2026-08-16": -27310471
       },
-      "profit_td": 2689529,
+      "profit_td": -27310471,
       "ratings": {
         "fetched_at": "2026-08-18",
         "imdb": {
@@ -58060,8 +58060,8 @@
       "year": 2026
     },
     "tt34895535": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 2000000,
+      "budget": 1000000,
       "daily_change": {
         "2026-08-07": 0,
         "2026-08-08": 0,
@@ -58088,7 +58088,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 92406,
       "movie_title": "Nimrods",
       "owner": "none",
@@ -58103,9 +58103,9 @@
         "2026-08-13": 0,
         "2026-08-14": 0,
         "2026-08-15": 0,
-        "2026-08-16": 92406
+        "2026-08-16": -1907594
       },
-      "profit_td": 92406,
+      "profit_td": -1907594,
       "ratings": {
         "fetched_at": "2026-08-18",
         "imdb": {
@@ -58578,8 +58578,8 @@
       "year": 2026
     },
     "tt35060353": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-07-29": 0,
         "2026-07-30": 0,
@@ -58624,7 +58624,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 433662,
       "movie_title": "The Wrong Girls",
       "owner": "none",
@@ -58646,11 +58646,11 @@
         "2026-08-11": 0,
         "2026-08-12": 0,
         "2026-08-13": 0,
-        "2026-08-14": 406482,
-        "2026-08-15": 406482,
-        "2026-08-16": 433662
+        "2026-08-14": -9593518,
+        "2026-08-15": -9593518,
+        "2026-08-16": -9566338
       },
-      "profit_td": 433662,
+      "profit_td": -9566338,
       "ratings": {
         "fetched_at": "2026-08-18",
         "imdb": {
