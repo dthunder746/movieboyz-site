@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-19 05:52:49",
+  "fetched_at": "2026-09-19 08:53:10",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-09-18T21-52-37Z",
+  "last_processed_snapshot": "2026-09-19T00-52-58Z",
   "latest_date": "2026-09-17",
   "latest_profit_date": "2026-09-17",
   "movies": {
@@ -74523,8 +74523,8 @@
       "year": 2026
     },
     "tt35538033": {
-      "breakeven": 160000000,
-      "budget": 80000000,
+      "breakeven": 150000000,
+      "budget": 75000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -75010,7 +75010,7 @@
         "2026-09-14": 0,
         "2026-09-15": 0,
         "2026-09-16": 0,
-        "2026-09-17": -151200000
+        "2026-09-17": -141200000
       },
       "profit_td": null,
       "ratings": {
@@ -83598,8 +83598,8 @@
       "year": 2026
     },
     "tt37542993": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 4000000,
+      "budget": 2000000,
       "daily_change": {
         "2026-07-16": 0,
         "2026-07-17": 0,
@@ -83734,7 +83734,7 @@
       },
       "days_running": null,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": null,
       "movie_title": "Daniel and the Fiery Furnace",
       "owner": "none",
