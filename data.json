@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-23 05:59:39",
+  "fetched_at": "2026-09-23 08:59:57",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-09-22T21-59-27Z",
+  "last_processed_snapshot": "2026-09-23T00-59-45Z",
   "latest_date": "2026-09-21",
   "latest_profit_date": "2026-09-21",
   "movies": {
@@ -1581,8 +1581,8 @@
       "year": 2026
     },
     "tt10794054": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -1913,7 +1913,7 @@
       },
       "days_running": 3,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 2366099,
       "movie_title": "The Weight",
       "owner": "none",
@@ -2078,11 +2078,11 @@
         "2026-09-16": 0,
         "2026-09-17": 0,
         "2026-09-18": 0,
-        "2026-09-19": 2315162,
-        "2026-09-20": 2366099,
-        "2026-09-21": 2366099
+        "2026-09-19": -7684838,
+        "2026-09-20": -7633901,
+        "2026-09-21": -7633901
       },
-      "profit_td": 2366099,
+      "profit_td": -7633901,
       "ratings": {
         "fetched_at": "2026-09-23",
         "imdb": {
@@ -16720,8 +16720,8 @@
       "year": 2026
     },
     "tt22030122": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-08-11": 0,
         "2026-08-12": 0,
@@ -16812,7 +16812,7 @@
       },
       "days_running": 3,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 52559,
       "movie_title": "Bad Apples",
       "owner": "none",
@@ -16854,14 +16854,14 @@
         "2026-09-13": 0,
         "2026-09-14": 0,
         "2026-09-15": 0,
-        "2026-09-16": 51433,
-        "2026-09-17": 51433,
-        "2026-09-18": 51433,
-        "2026-09-19": 51433,
-        "2026-09-20": 51433,
-        "2026-09-21": 52559
+        "2026-09-16": -9948567,
+        "2026-09-17": -9948567,
+        "2026-09-18": -9948567,
+        "2026-09-19": -9948567,
+        "2026-09-20": -9948567,
+        "2026-09-21": -9947441
       },
-      "profit_td": 52559,
+      "profit_td": -9947441,
       "ratings": {
         "fetched_at": "2026-09-23",
         "imdb": {
@@ -81796,8 +81796,8 @@
       "year": 2026
     },
     "tt36841161": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 50000000,
+      "budget": 25000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -82128,7 +82128,7 @@
       },
       "days_running": 3,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 2032093,
       "movie_title": "Shaun the Sheep: The Beast of Mossy Bottom",
       "owner": "none",
@@ -82293,11 +82293,11 @@
         "2026-09-16": 0,
         "2026-09-17": 0,
         "2026-09-18": 0,
-        "2026-09-19": 1904000,
-        "2026-09-20": 2032093,
-        "2026-09-21": 2032093
+        "2026-09-19": -48096000,
+        "2026-09-20": -47967907,
+        "2026-09-21": -47967907
       },
-      "profit_td": 2032093,
+      "profit_td": -47967907,
       "ratings": {
         "fetched_at": "2026-09-23",
         "imdb": {
