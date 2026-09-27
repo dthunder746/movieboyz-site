@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-27 05:54:08",
+  "fetched_at": "2026-09-27 10:54:27",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-09-26T21-53-57Z",
+  "last_processed_snapshot": "2026-09-27T02-54-16Z",
   "latest_date": "2026-09-25",
   "latest_profit_date": "2026-09-25",
   "movies": {
@@ -76492,6 +76492,27 @@
         }
       },
       "release_date": "2026-10-09",
+      "released_digital": null,
+      "season": "FALL",
+      "weekly_gross": {},
+      "year": 2026
+    },
+    "tt35511966": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "La bola negra",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-10-16",
       "released_digital": null,
       "season": "FALL",
       "weekly_gross": {},
