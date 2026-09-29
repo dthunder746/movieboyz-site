@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-29 11:57:24",
+  "fetched_at": "2026-09-29 12:57:27",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-09-29T03-57-17Z",
+  "last_processed_snapshot": "2026-09-29T04-57-20Z",
   "latest_date": "2026-09-27",
   "latest_profit_date": "2026-09-27",
   "movies": {
@@ -27396,8 +27396,8 @@
       "year": 2026
     },
     "tt27739255": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -27740,7 +27740,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 0,
       "movie_title": "Charlie Harper",
       "owner": "none",
@@ -27915,7 +27915,7 @@
         "2026-09-26": 0,
         "2026-09-27": 0
       },
-      "profit_td": 0,
+      "profit_td": -10000000,
       "ratings": {
         "fetched_at": "2026-09-29",
         "imdb": {
@@ -71876,8 +71876,8 @@
       "year": 2026
     },
     "tt34611096": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-09-15": 0,
         "2026-09-16": 0,
@@ -71910,7 +71910,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 106751,
       "movie_title": "The Stunt Driver",
       "owner": "none",
@@ -71927,10 +71927,10 @@
         "2026-09-23": 0,
         "2026-09-24": 0,
         "2026-09-25": 0,
-        "2026-09-26": 102000,
-        "2026-09-27": 106751
+        "2026-09-26": -9898000,
+        "2026-09-27": -9893249
       },
-      "profit_td": 106751,
+      "profit_td": -9893249,
       "ratings": {
         "fetched_at": "2026-09-29",
         "imdb": {
@@ -80092,8 +80092,8 @@
       "year": 2026
     },
     "tt35856037": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-07-16": 0,
         "2026-07-17": 0,
@@ -80248,7 +80248,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 204008,
       "movie_title": "Your Mother Your Mother Your Mother",
       "owner": "none",
@@ -80326,10 +80326,10 @@
         "2026-09-23": 0,
         "2026-09-24": 0,
         "2026-09-25": 0,
-        "2026-09-26": 199000,
-        "2026-09-27": 204008
+        "2026-09-26": -9801000,
+        "2026-09-27": -9795992
       },
-      "profit_td": 204008,
+      "profit_td": -9795992,
       "ratings": {
         "fetched_at": "2026-09-29",
         "imdb": {
@@ -94010,8 +94010,8 @@
       "year": 2026
     },
     "tt39149197": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 6000000,
+      "budget": 3000000,
       "daily_change": {
         "2026-07-16": 0,
         "2026-07-17": 0,
@@ -94166,7 +94166,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 221251,
       "movie_title": "Ha-Chan, Shake Your Booty!",
       "owner": "none",
@@ -94243,11 +94243,11 @@
         "2026-09-22": 0,
         "2026-09-23": 0,
         "2026-09-24": 0,
-        "2026-09-25": 90000,
-        "2026-09-26": 185000,
-        "2026-09-27": 221251
+        "2026-09-25": -5910000,
+        "2026-09-26": -5815000,
+        "2026-09-27": -5778749
       },
-      "profit_td": 221251,
+      "profit_td": -5778749,
       "ratings": {
         "fetched_at": "2026-09-29",
         "imdb": {
