@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-06 06:07:09",
+  "fetched_at": "2026-10-06 09:07:19",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-10-05T22-07-02Z",
+  "last_processed_snapshot": "2026-10-06T01-07-11Z",
   "latest_date": "2026-10-04",
   "latest_profit_date": "2026-10-04",
   "movies": {
@@ -1699,8 +1699,8 @@
       "year": 2026
     },
     "tt10377864": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 20000000,
+      "budget": 10000000,
       "daily_change": {
         "2026-10-02": 0,
         "2026-10-03": 550000,
@@ -1713,17 +1713,17 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 592984,
       "movie_title": "Beware Boi\u00fana",
       "owner": "none",
       "pick_type": null,
       "profit": {
         "2026-10-02": 0,
-        "2026-10-03": 550000,
-        "2026-10-04": 592984
+        "2026-10-03": -19450000,
+        "2026-10-04": -19407016
       },
-      "profit_td": 592984,
+      "profit_td": -19407016,
       "ratings": {
         "fetched_at": "2026-10-06",
         "imdb": {
@@ -65971,8 +65971,8 @@
       "year": 2026
     },
     "tt33184695": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-05-08": 0,
         "2026-05-09": 0,
@@ -66279,7 +66279,7 @@
       },
       "days_running": 2,
       "draft_pick": null,
-      "estimated_budget": false,
+      "estimated_budget": true,
       "gross_td": 475019,
       "movie_title": "Rolling Loud",
       "owner": "none",
@@ -66432,11 +66432,11 @@
         "2026-09-29": 0,
         "2026-09-30": 0,
         "2026-10-01": 0,
-        "2026-10-02": 192923,
-        "2026-10-03": 466912,
-        "2026-10-04": 475019
+        "2026-10-02": -9807077,
+        "2026-10-03": -9533088,
+        "2026-10-04": -9524981
       },
-      "profit_td": 475019,
+      "profit_td": -9524981,
       "ratings": {
         "fetched_at": "2026-10-06",
         "imdb": {
