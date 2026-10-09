@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-10 06:12:50",
+  "fetched_at": "2026-10-10 07:12:53",
   "game_config": {
     "bomb_mode": "split",
     "breakeven_multiplier": 2,
@@ -7,7 +7,7 @@
     "num_players": 5,
     "year": 2026
   },
-  "last_processed_snapshot": "2026-10-09T22-12-42Z",
+  "last_processed_snapshot": "2026-10-09T23-12-46Z",
   "latest_date": "2026-10-08",
   "latest_profit_date": "2026-10-08",
   "movies": {
@@ -74369,8 +74369,8 @@
       "year": 2026
     },
     "tt34385184": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 10000000,
+      "budget": 5000000,
       "daily_change": {
         "2026-10-07": 0,
         "2026-10-08": 0
@@ -93524,8 +93524,8 @@
       "year": 2026
     },
     "tt37510326": {
-      "breakeven": null,
-      "budget": 0,
+      "breakeven": 60000000,
+      "budget": 30000000,
       "daily_change": {
         "2026-04-13": 0,
         "2026-04-14": 0,
@@ -94074,7 +94074,7 @@
         "2026-10-05": 0,
         "2026-10-06": 0,
         "2026-10-07": 0,
-        "2026-10-08": 650000
+        "2026-10-08": -59350000
       },
       "profit_td": null,
       "ratings": {
@@ -102450,6 +102450,27 @@
         }
       },
       "release_date": "2026-10-23",
+      "released_digital": null,
+      "season": "FALL",
+      "weekly_gross": {},
+      "year": 2026
+    },
+    "tt45368240": {
+      "breakeven": null,
+      "budget": 0,
+      "daily_change": {},
+      "daily_gross": {},
+      "days_running": null,
+      "draft_pick": null,
+      "estimated_budget": false,
+      "gross_td": null,
+      "movie_title": "You Can See Everything",
+      "owner": "none",
+      "pick_type": null,
+      "profit": {},
+      "profit_td": null,
+      "ratings": null,
+      "release_date": "2026-10-16",
       "released_digital": null,
       "season": "FALL",
       "weekly_gross": {},
